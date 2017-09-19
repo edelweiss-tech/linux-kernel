@@ -42,3 +42,6 @@ obj-$(CONFIG_MDIO_MOXART)	+= mdio-moxart.o
 obj-$(CONFIG_MDIO_BCM_UNIMAC)	+= mdio-bcm-unimac.o
 obj-$(CONFIG_MICROCHIP_PHY)	+= microchip.o
 obj-$(CONFIG_MDIO_BCM_IPROC)	+= mdio-bcm-iproc.o
+obj-$(CONFIG_BAIKAL_MDIO)	+= mdio-be-gpio.o
+obj-$(CONFIG_88X2222_PHY)	+= mv88x2222.o
+
