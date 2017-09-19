@@ -203,6 +203,29 @@ static void swPanelPowerSequence(int disp, int delay)
 	POKE32(PANEL_DISPLAY_CTRL, reg);
 	primaryWaitVerticalSync(delay);
 
+  reg = PEEK32(PANEL_DISPLAY_CTRL);
+  //reg |= ((disp)?(PANEL_DISPLAY_CTRL_FPVDDEN):0);
+  reg = FIELD_VALUE(reg, PANEL_DISPLAY_CTRL, FPVDDEN, disp);
+  POKE32(PANEL_DISPLAY_CTRL, reg);
+  primaryWaitVerticalSync(delay);
+
+//ddk750_reg.h defines do not match the sm750 documentation, these defines are following the documentation.
+#define BACKLIGHT_PIN 17
+#define DOC_GPIO_DATA      0x010000
+#define DOC_GPIO_DATA_HIGH 0x010004
+#define DOC_GPIO_DIRECTION 0x010008
+
+   reg = PEEK32(DOC_GPIO_DIRECTION);
+   reg |= (1<<BACKLIGHT_PIN);
+   POKE32(DOC_GPIO_DIRECTION, reg);
+
+   reg = PEEK32(DOC_GPIO_DATA_HIGH);
+   reg |= (1<<BACKLIGHT_PIN);
+   POKE32(DOC_GPIO_DATA_HIGH, reg);
+
+   reg = PEEK32(DOC_GPIO_DATA);
+   reg |= (1<<BACKLIGHT_PIN);
+   POKE32(DOC_GPIO_DATA, reg);
 }
 
 void ddk750_setLogicalDispOut(disp_output_t output)

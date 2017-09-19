@@ -32,12 +32,17 @@
  * #endif
  */
 
+#ifdef CONFIG_SM750_DMA
+ssize_t dw_fb_write(struct fb_info *info, const char __user *buf,
+                                        size_t count, loff_t *ppos);
+int dw_fb_ioctl(struct fb_info *info, u_int cmd, u_long arg);
+#endif
 /* common var for all device */
 static int g_hwcursor = 1;
 static int g_noaccel;
 static int g_nomtrr;
 static const char *g_fbmode[] = {NULL, NULL};
-static const char *g_def_fbmode = "800x600-16@60";
+static const char *g_def_fbmode = "800x600-16@60"; //alm
 static char *g_settings;
 static int g_dualview;
 static char *g_option;
@@ -725,6 +730,10 @@ static struct fb_ops lynxfb_ops = {
 	.fb_fillrect = cfb_fillrect,
 	.fb_imageblit = cfb_imageblit,
 	.fb_copyarea = cfb_copyarea,
+#ifdef CONFIG_SM750_DMA
+	.fb_write = dw_fb_write,
+	.fb_ioctl = dw_fb_ioctl,
+#endif
 	/* cursor */
 	.fb_cursor = lynxfb_ops_cursor,
 };
@@ -1008,6 +1017,19 @@ static int lynxfb_pci_probe(struct pci_dev *pdev,
 	struct fb_info *info[] = {NULL, NULL};
 	struct sm750_dev *sm750_dev = NULL;
 	int fbidx;
+#ifdef CONFIG_SM750_DMA
+	struct resource *r;
+
+
+	printk(KERN_INFO "%s: start\n", __FUNCTION__);
+	r = &pdev->resource[0];
+	if (!r->start && r->end) {
+		if (pci_assign_resource(pdev, 0)) {
+			pr_err("can't assign resource 0\n");
+			goto err_enable;
+		}
+	}
+#endif/*CONFIG_SM750_DMA*/
 
 	/* enable device */
 	if (pci_enable_device(pdev)) {
