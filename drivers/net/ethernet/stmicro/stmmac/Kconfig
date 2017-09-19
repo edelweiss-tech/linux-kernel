@@ -37,6 +37,16 @@ config DWMAC_GENERIC
 	  platform specific code to function or is using platform
 	  data for setup.
 
+config DWMAC_BAIKAL
+	tristate "Baikal Electronics DWMAC support"
+	default ARCH_BAIKAL
+	depends on OF
+	help
+	  Support for Baikal Electronics DWMAC Ethernet.
+
+	  This selects the Baikal-T SoC glue layer support for the stmmac
+	  device driver.
+
 config DWMAC_IPQ806X
 	tristate "QCA IPQ806x DWMAC support"
 	default ARCH_QCOM
@@ -114,7 +124,17 @@ config DWMAC_SUNXI
 	  This selects Allwinner SoC glue layer support for the
 	  stmmac device driver. This driver is used for A20/A31
 	  GMAC ethernet controller.
-endif
+
+config STMMAC_POLL_MODE
+    bool "Enable poll mode on STMMAC"
+    default n
+    depends on STMMAC_PLATFORM
+    ---help---  
+      If set to Y, this option enables stmmac polling mode, it tries to
+      reschedule the poll from the STMMAC's poll method.
+
+      If unsure, say N.
+endif # STMMAC_PLATFORM
 
 config STMMAC_PCI
 	tristate "STMMAC PCI bus support"
