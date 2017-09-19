@@ -29,11 +29,24 @@ config AMD_PHY
 	---help---
 	  Currently supports the am79c874
 
+config BAIKAL_MDIO
+	tristate "Driver for the Baikal Electronics GPIO MDIO bus"
+	depends on OF && GPIOLIB && MDIO_BITBANG
+	---help---
+	  Support for Baikal Electronics GPIO MDIO bus
+
 config MARVELL_PHY
 	tristate "Drivers for Marvell PHYs"
 	---help---
 	  Currently has a driver for the 88E1011S
-	
+
+config 88X2222_PHY
+	tristate "Drivers for Marvell 88X2222 Tanceiver"
+	---help---
+	  Support for Marvell Integrated Dual-port
+	  Multi-speed Ethernet Transceivers.
+	  Currently supports 88x2222
+
 config DAVICOM_PHY
 	tristate "Drivers for Davicom PHYs"
 	---help---
