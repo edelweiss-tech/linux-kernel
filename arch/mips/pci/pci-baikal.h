@@ -686,5 +686,6 @@
 void dw_set_iatu_region(int dir, int index, int base_addr, int limit_addr, int target_addr, int tlp_type);
 irqreturn_t dw_msi_interrupt(int id, void *dev_id);
 int dw_msi_init(void);
+void pci_dw_dma_init(void);
 
 #endif /* __PCI_BAIKAL_H__ */

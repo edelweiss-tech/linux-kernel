@@ -562,6 +562,10 @@ void __init mips_pcibios_init(void)
 	controller->io_offset = 0;
 	register_pci_controller(controller);
 
+#ifdef CONFIG_MIPS_BAIKAL_PCI_DMA
+	pci_dw_dma_init();
+#endif
+
 #ifdef CONFIG_CPU_SUPPORTS_UNCACHED_ACCELERATED
 	baikal_find_vga_mem_init();
 #endif /* CONFIG_CPU_SUPPORTS_UNCACHED_ACCELERATED */
