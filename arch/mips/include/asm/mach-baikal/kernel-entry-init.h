@@ -13,6 +13,8 @@
 #include <asm/regdef.h>
 #include <asm/mipsregs.h>
 
+#define MIPS32R5_CONF_MM	(_ULCAST_(1) << 18)
+
 	/*
 	 * Prepare segments for EVA boot:
 	 *
