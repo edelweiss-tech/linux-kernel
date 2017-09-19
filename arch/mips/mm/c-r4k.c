@@ -780,6 +780,15 @@ static void r4k_dma_cache_inv(unsigned long addr, unsigned long size)
 }
 #endif /* CONFIG_DMA_NONCOHERENT || CONFIG_DMA_MAYBE_COHERENT */
 
+static void r4k_flush_scache(void)
+{
+	preempt_disable();
+	r4k_blast_scache();
+	preempt_enable();
+	__sync();
+	return;
+}
+
 /*
  * While we're protected against bad userland addresses we don't care
  * very much about what happens in that case.  Usually a segmentation
@@ -1685,6 +1694,7 @@ void r4k_cache_init(void)
 	flush_cache_mm		= r4k_flush_cache_mm;
 	flush_cache_page	= r4k_flush_cache_page;
 	flush_cache_range	= r4k_flush_cache_range;
+	__flush_scache		= r4k_flush_scache;
 
 	__flush_kernel_vmap_range = r4k_flush_kernel_vmap_range;
 

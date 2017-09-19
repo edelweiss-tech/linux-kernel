@@ -32,6 +32,7 @@ obj-$(CONFIG_LEMOTE_FULOONG2E)	+= fixup-fuloong2e.o ops-loongson2.o
 obj-$(CONFIG_LEMOTE_MACH2F)	+= fixup-lemote2f.o ops-loongson2.o
 obj-$(CONFIG_LOONGSON_MACH3X)	+= fixup-loongson3.o ops-loongson3.o
 obj-$(CONFIG_MIPS_MALTA)	+= fixup-malta.o pci-malta.o
+obj-$(CONFIG_MIPS_BAIKAL)	+= fixup-baikal.o pci-baikal.o ops-dw.o
 obj-$(CONFIG_PMC_MSP7120_GW)	+= fixup-pmcmsp.o ops-pmcmsp.o
 obj-$(CONFIG_PMC_MSP7120_EVAL)	+= fixup-pmcmsp.o ops-pmcmsp.o
 obj-$(CONFIG_PMC_MSP7120_FPGA)	+= fixup-pmcmsp.o ops-pmcmsp.o
@@ -64,4 +65,5 @@ obj-$(CONFIG_CPU_XLP)		+= pci-xlp.o
 ifdef CONFIG_PCI_MSI
 obj-$(CONFIG_CAVIUM_OCTEON_SOC) += msi-octeon.o
 obj-$(CONFIG_CPU_XLP)		+= msi-xlp.o
+obj-$(CONFIG_MIPS_BAIKAL)	+= msi-baikal.o
 endif

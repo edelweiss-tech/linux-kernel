@@ -162,7 +162,9 @@ asmlinkage void start_secondary(void)
 	mips_clockevent_init();
 	mp_ops->init_secondary();
 	cpu_report();
+#ifndef CONFIG_MACH_BAIKAL_QEMU
 	maar_init();
+#endif
 
 	/*
 	 * XXX parity protection should be folded in here when it's converted

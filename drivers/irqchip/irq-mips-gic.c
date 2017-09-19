@@ -229,6 +229,122 @@ void gic_stop_count(void)
 }
 
 #endif
+#ifdef CONFIG_WDT_MIPS_GIC
+unsigned int gic_read_wd_ctrl(void)
+{
+	return 	gic_read32(GIC_REG(VPE_LOCAL, GIC_VPE_WD_CONFIG0));
+}
+
+void gic_write_wd_ctrl(unsigned int ctrl)
+{
+	gic_write32(GIC_REG(VPE_LOCAL, GIC_VPE_WD_CONFIG0), ctrl);
+}
+
+void gic_write_cpu_wd_ctrl(unsigned int ctrl, int cpu)
+{
+	unsigned long flags;
+
+	local_irq_save(flags);
+
+	gic_write(GIC_REG(VPE_LOCAL, GIC_VPE_OTHER_ADDR), cpu);
+	gic_write32(GIC_REG(VPE_OTHER, GIC_VPE_WD_CONFIG0), ctrl);
+
+	local_irq_restore(flags);
+}
+void gic_start_wd(void)
+{
+	u32 gicconfig;
+
+	/* Start watchdog */
+	gicconfig = gic_read32(GIC_REG(VPE_LOCAL, GIC_VPE_WD_CONFIG0));
+	gicconfig |= GIC_WD_CTRL_START_MSK;
+	gic_write32(GIC_REG(VPE_LOCAL, GIC_VPE_WD_CONFIG0), gicconfig);
+}
+
+void gic_start_cpu_wd(int cpu)
+{
+	u32 gicconfig;
+	unsigned long flags;
+
+	local_irq_save(flags);
+
+	gic_write(GIC_REG(VPE_LOCAL, GIC_VPE_OTHER_ADDR), cpu);
+
+	/* Start watchdog */
+	gicconfig = gic_read32(GIC_REG(VPE_OTHER, GIC_VPE_WD_CONFIG0));
+	gicconfig |= GIC_WD_CTRL_START_MSK;
+	gic_write32(GIC_REG(VPE_OTHER, GIC_VPE_WD_CONFIG0), gicconfig);
+
+	local_irq_restore(flags);
+}
+
+void gic_stop_wd(void)
+{
+	u32 gicconfig;
+
+	/* Stop watchdog */
+	gicconfig = gic_read32(GIC_REG(VPE_LOCAL, GIC_VPE_WD_CONFIG0));
+	gicconfig &= ~GIC_WD_CTRL_START_MSK;
+	gic_write32(GIC_REG(VPE_LOCAL, GIC_VPE_WD_CONFIG0), gicconfig);
+}
+
+void gic_stop_cpu_wd(int cpu)
+{
+	u32 gicconfig;
+	unsigned long flags;
+
+	local_irq_save(flags);
+
+	gic_write(GIC_REG(VPE_LOCAL, GIC_VPE_OTHER_ADDR), cpu);
+
+	/* Start watchdog */
+	gicconfig = gic_read32(GIC_REG(VPE_OTHER, GIC_VPE_WD_CONFIG0));
+	gicconfig &= ~GIC_WD_CTRL_START_MSK;
+	gic_write32(GIC_REG(VPE_OTHER, GIC_VPE_WD_CONFIG0), gicconfig);
+
+	local_irq_restore(flags);
+}
+
+unsigned int gic_read_wd_count(void)
+{
+	return gic_read32(GIC_REG(VPE_LOCAL, GIC_VPE_WD_COUNT0));
+}
+
+unsigned int gic_read_wd_initial(void)
+{
+	return gic_read32(GIC_REG(VPE_LOCAL, GIC_VPE_WD_INITIAL0));
+}
+
+void gic_write_wd_initial(unsigned int cnt)
+{
+	unsigned int ctrl;
+
+	ctrl = gic_read32(GIC_REG(VPE_LOCAL, GIC_VPE_WD_CONFIG0));
+	gic_write32(GIC_REG(VPE_LOCAL, GIC_VPE_WD_CONFIG0),
+			ctrl & ~GIC_WD_CTRL_START_MSK);
+
+	gic_write32(GIC_REG(VPE_LOCAL, GIC_VPE_WD_INITIAL0), cnt);
+	gic_write32(GIC_REG(VPE_LOCAL, GIC_VPE_WD_CONFIG0), ctrl);
+}
+
+void gic_write_cpu_wd_initial(unsigned int cnt, int cpu)
+{
+	unsigned long flags;
+	unsigned int ctrl; 
+
+	local_irq_save(flags);
+
+	gic_write(GIC_REG(VPE_LOCAL, GIC_VPE_OTHER_ADDR), cpu);
+
+	ctrl = gic_read32(GIC_REG(VPE_OTHER, GIC_VPE_WD_CONFIG0));
+	gic_write32(GIC_REG(VPE_OTHER, GIC_VPE_WD_CONFIG0),
+			ctrl & ~GIC_WD_CTRL_START_MSK);
+	gic_write32(GIC_REG(VPE_OTHER, GIC_VPE_WD_INITIAL0), cnt);
+	gic_write32(GIC_REG(VPE_OTHER, GIC_VPE_WD_CONFIG0), ctrl);
+
+	local_irq_restore(flags);
+}
+#endif
 
 static bool gic_local_irq_is_routable(int intr)
 {
@@ -267,6 +383,12 @@ static void gic_bind_eic_interrupt(int irq, int set)
 void gic_send_ipi(unsigned int intr)
 {
 	gic_write(GIC_REG(SHARED, GIC_SH_WEDGE), GIC_SH_WEDGE_SET(intr));
+}
+
+int gic_get_c0_wd_int(void)
+{
+	return irq_create_mapping(gic_irq_domain,
+				  GIC_LOCAL_TO_HWIRQ(GIC_LOCAL_INT_WD));
 }
 
 int gic_get_c0_compare_int(void)
@@ -349,11 +471,17 @@ static void gic_handle_shared_int(bool chained)
 	while (intr != gic_shared_intrs) {
 		virq = irq_linear_revmap(gic_irq_domain,
 					 GIC_SHARED_TO_HWIRQ(intr));
+
+		if (!virq) {
+			pr_info("gic_handle_local_int: chained=%d  intr=%d  virq=%d\n", chained, intr, virq);
+			goto __next;
+		}
+
 		if (chained)
 			generic_handle_irq(virq);
 		else
 			do_IRQ(virq);
-
+__next:
 		/* go to next pending bit */
 		bitmap_clear(pending, intr, 1);
 		intr = find_first_bit(pending, gic_shared_intrs);
@@ -495,11 +623,15 @@ static void gic_handle_local_int(bool chained)
 	while (intr != GIC_NUM_LOCAL_INTRS) {
 		virq = irq_linear_revmap(gic_irq_domain,
 					 GIC_LOCAL_TO_HWIRQ(intr));
+		if (!virq) {
+			pr_info("gic_handle_local_int: chained=%d  intr=%d  virq=%d\n", chained, intr, virq);
+			goto __next;
+		}
 		if (chained)
 			generic_handle_irq(virq);
 		else
 			do_IRQ(virq);
-
+__next:
 		/* go to next pending bit */
 		bitmap_clear(&pending, intr, 1);
 		intr = find_first_bit(&pending, GIC_NUM_LOCAL_INTRS);
@@ -634,9 +766,15 @@ static __init void gic_ipi_init(void)
 {
 	int i;
 
+#ifdef CONFIG_MIPS_GIC_IPI_LOW
+	/* Use low 2 * NR_CPUS interrupts as IPIs */
+	gic_resched_int_base = 1;
+	gic_call_int_base = nr_cpu_ids + gic_resched_int_base;
+#else
 	/* Use last 2 * NR_CPUS interrupts as IPIs */
 	gic_resched_int_base = gic_shared_intrs - nr_cpu_ids;
 	gic_call_int_base = gic_resched_int_base - nr_cpu_ids;
+#endif
 
 	for (i = 0; i < nr_cpu_ids; i++) {
 		gic_ipi_init_one(gic_call_int_base + i, i, &irq_call);
@@ -809,6 +947,7 @@ static void __init __gic_init(unsigned long gic_base_addr,
 			      struct device_node *node)
 {
 	unsigned int gicconfig;
+	int i;
 
 	__gic_base_addr = gic_base_addr;
 
@@ -827,6 +966,13 @@ static void __init __gic_init(unsigned long gic_base_addr,
 		/* Always use vector 1 in EIC mode */
 		gic_cpu_pin = 0;
 		timer_cpu_pin = gic_cpu_pin;
+		for (i = 0; i < gic_vpes; i++) {
+			/* Set core other segment */
+			gic_write(GIC_REG(VPE_LOCAL, GIC_VPE_OTHER_ADDR), i);
+			/* Set EIC mode */
+			gic_write(GIC_REG(VPE_OTHER, GIC_VPE_CTL), GIC_VPE_CTL_EIC_MODE_MSK);
+		}
+
 		set_vi_handler(gic_cpu_pin + GIC_PIN_TO_VEC_OFFSET,
 			       __gic_irq_dispatch);
 	} else {

@@ -1839,6 +1839,13 @@ SYSCALL_DEFINE4(epoll_ctl, int, epfd, int, op, int, fd,
 	struct epoll_event epds;
 	struct eventpoll *tep = NULL;
 
+#if CONFIG_MIPS_BAIKAL
+/* Temporary fix for Baikal CPU branch, TODO ... */
+#warning temporary fix: epoll_event * is checked to be not null
+	if (op != EPOLL_CTL_DEL && !event)
+		return -EFAULT;
+#endif
+
 	error = -EFAULT;
 	if (ep_op_has_event(op) &&
 	    copy_from_user(&epds, event, sizeof(struct epoll_event)))

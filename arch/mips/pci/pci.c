@@ -86,7 +86,7 @@ static void pcibios_scanbus(struct pci_controller *hose)
 	if (!hose->iommu)
 		PCI_DMA_BUS_IS_PHYS = 1;
 
-	if (hose->get_busno && pci_has_flag(PCI_PROBE_ONLY))
+    if (hose->get_busno)
 		next_busno = (*hose->get_busno)();
 
 	pci_add_resource_offset(&resources,
