@@ -92,7 +92,7 @@ phys_addr_t __weak mips_cdmm_phys_base(void)
 
 	if (!(reg & MIPS_CONF3_CDMM))
 		return 0;
-	reg = read_c0_cdmm() | MIPS_CDMMBASE_EN;
+	reg = read_c0_cdmmbase() | MIPS_CDMMBASE_EN;
 	write_c0_cdmmbase(reg);
 
 	return (reg >> MIPS_CDMMBASE_ADDR_SHIFT) << MIPS_CDMMBASE_ADDR_START;
