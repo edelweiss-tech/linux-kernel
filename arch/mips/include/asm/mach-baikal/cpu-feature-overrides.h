@@ -78,7 +78,11 @@
 #define cpu_has_msa		0
 #endif
 
+#ifdef CONFIG_MACH_BAIKAL_QEMU
+#define cpu_has_maar		0
+#else
 #define cpu_has_maar		1
+#endif
 #define cpu_has_htw		0
 
 #endif /* _BAIKAL_CPU_FEATURE_OVERRIDES_H */
