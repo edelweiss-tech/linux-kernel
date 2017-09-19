@@ -1273,13 +1273,6 @@ SYSCALL_DEFINE2(setdomainname, char __user *, name, int, len)
 	if (len < 0 || len > __NEW_UTS_LEN)
 		return -EINVAL;
 
-#if CONFIG_MIPS_BAIKAL
-/* Temporary fix for Baikal CPU branch, TODO ... */
-#warning temporary fix: name is checked to be not null
-	if (!name)
-		return -EFAULT;
-#endif	
-
 	down_write(&uts_sem);
 	errno = -EFAULT;
 	if (!copy_from_user(tmp, name, len)) {
