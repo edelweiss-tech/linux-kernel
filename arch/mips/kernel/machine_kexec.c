@@ -12,7 +12,9 @@
 
 #include <asm/cacheflush.h>
 #include <asm/page.h>
-#include <asm/machine_kexec.h>
+
+extern const unsigned char relocate_new_kernel[];
+extern const size_t relocate_new_kernel_size;
 
 extern unsigned long kexec_start_address;
 extern unsigned long kexec_indirection_page;
@@ -63,26 +65,11 @@ machine_kexec(struct kimage *image)
 	unsigned long entry;
 	unsigned long *ptr;
 
-	/*
-	 * XXX: from arm/kernel/machine_kexec.c:
-	 * This can only happen if machine_shutdown() failed to disable some
-	 * CPU, and that can only happen if the checks in
-	 * machine_kexec_prepare() were not correct. If this fails, we can't
-	 * reliably kexec anyway, so BUG_ON is appropriate.
-	 */
-	BUG_ON(num_online_cpus() > 1);
-
-	pr_info("machine_kexec - machine_kexec: image = %p\n", image);
-
 	reboot_code_buffer =
 	  (unsigned long)page_address(image->control_code_page);
-	pr_debug("machine_kexec: reboot_code_buffer @ 0x%lx\n", reboot_code_buffer);
 
 	kexec_start_address =
 		(unsigned long) phys_to_virt(image->start);
-	pr_debug("machine_kexec: kexec_start_address (\"kernel_entry\") 0x%lx\n", kexec_start_address);
-	pr_debug("machine_kexec: kexec_relocate_new_kernel code @ 0x%p\n", (void *)kexec_relocate_new_kernel);
-	pr_debug("machine_kexec: kexec_relocate_new_kernel size %lu\n", KEXEC_RELOCATE_NEW_KERNEL_SIZE);
 
 	if (image->type == KEXEC_TYPE_DEFAULT) {
 		kexec_indirection_page =
@@ -91,9 +78,8 @@ machine_kexec(struct kimage *image)
 		kexec_indirection_page = (unsigned long)&image->head;
 	}
 
-	pr_info("machine_kexec: copy kexec_relocate_new_kernel code to 0x%p\n", (void *)reboot_code_buffer);
-	memcpy((void*)reboot_code_buffer, kexec_relocate_new_kernel,
-	       KEXEC_RELOCATE_NEW_KERNEL_SIZE);
+	memcpy((void*)reboot_code_buffer, relocate_new_kernel,
+	       relocate_new_kernel_size);
 
 	/*
 	 * The generic kexec code builds a page list with physical
@@ -109,18 +95,18 @@ machine_kexec(struct kimage *image)
 			*ptr = (unsigned long) phys_to_virt(*ptr);
 	}
 
+	printk("Will call new kernel at %08lx\n", image->start);
+	printk("Bye ...\n");
+	__flush_cache_all();
+
 	/*
 	 * we do not want to be bothered.
 	 */
 	local_irq_disable();
-
-	printk("Will call new kernel at %08lx\n", image->start);
-	printk("Bye ...\n");
-	__flush_cache_all();
 #ifdef CONFIG_SMP
 	/* All secondary cpus now may jump to kexec_wait cycle */
 	relocated_kexec_smp_wait = reboot_code_buffer +
-		(void *)(kexec_smp_wait - kexec_relocate_new_kernel);
+		(void *)(kexec_smp_wait - relocate_new_kernel);
 	smp_wmb();
 	atomic_set(&kexec_ready_to_reboot, 1);
 #endif
