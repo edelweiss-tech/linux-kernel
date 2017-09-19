@@ -60,6 +60,12 @@
 #define KEXEC_CRASH_MEM_ALIGN PAGE_SIZE
 #endif
 
+#ifdef ARCH_WANTS_KEXEC_IN_LOW_MEM
+#define GFP_KEXEC	GFP_USER
+#else
+#define GFP_KEXEC	GFP_HIGHUSER
+#endif
+
 #define KEXEC_NOTE_HEAD_BYTES ALIGN(sizeof(struct elf_note), 4)
 #define KEXEC_CORE_NOTE_NAME "CORE"
 #define KEXEC_CORE_NOTE_NAME_BYTES ALIGN(sizeof(KEXEC_CORE_NOTE_NAME), 4)
