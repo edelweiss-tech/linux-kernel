@@ -23,6 +23,9 @@
 #include "sm750.h"
 #include "ddk750.h"
 #include "sm750_accel.h"
+#ifdef USE_DVICHIP
+#include "ddk750_dvi.h"
+#endif
 
 int hw_sm750_map(struct sm750_dev *sm750_dev, struct pci_dev *pdev)
 {
@@ -172,6 +175,11 @@ int hw_sm750_inithw(struct sm750_dev *sm750_dev, struct pci_dev *pdev)
 	/* init 2d engine */
 	if (!sm750_dev->accel_off)
 		hw_sm750_initAccel(sm750_dev);
+
+#ifdef USE_DVICHIP
+  if(dviInit(1, 1, 0, 1, 1, 1, 7, 1, 1, 4)) pr_info("Init Display failed\n");
+#endif
+
 
 	return 0;
 }

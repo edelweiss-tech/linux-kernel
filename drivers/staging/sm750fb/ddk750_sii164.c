@@ -1,6 +1,3 @@
-#define USE_DVICHIP
-#ifdef USE_DVICHIP
-
 #include "ddk750_sii164.h"
 #include "ddk750_hwi2c.h"
 
@@ -8,14 +5,16 @@
 #define SII164_I2C_ADDRESS                  0x70
 
 /* Define this definition to use hardware i2c. */
-#define USE_HW_I2C
+//#define USE_HW_I2C
 
 #ifdef USE_HW_I2C
+#  include "ddk750_hwi2c.h"
     #define i2cWriteReg sm750_hw_i2c_write_reg
     #define i2cReadReg  sm750_hw_i2c_read_reg
 #else
-    #define i2cWriteReg swI2CWriteReg
-    #define i2cReadReg  swI2CReadReg
+#  include "ddk750_swi2c.h"
+    #define i2cWriteReg sm750_sw_i2c_write_reg
+    #define i2cReadReg  sm750_sw_i2c_read_reg
 #endif
 
 /* SII164 Vendor and Device ID */
@@ -136,7 +135,7 @@ long sii164InitChip(
 #endif
 
 	/* Check if SII164 Chip exists */
-	if ((sii164GetVendorID() == SII164_VENDOR_ID) && (sii164GetDeviceID() == SII164_DEVICE_ID)) {
+	//if ((sii164GetVendorID() == SII164_VENDOR_ID) && (sii164GetDeviceID() == SII164_DEVICE_ID)) {
 		/*
 		 *  Initialize SII164 controller chip.
 		 */
@@ -233,10 +232,10 @@ long sii164InitChip(
 		i2cWriteReg(SII164_I2C_ADDRESS, SII164_CONFIGURATION, config);
 
 		return 0;
-	}
+    //}
 
 	/* Return -1 if initialization fails. */
-	return (-1);
+	//return (-1);
 }
 
 
@@ -403,7 +402,3 @@ void sii164ClearInterrupt(void)
 }
 
 #endif
-
-#endif
-
-
