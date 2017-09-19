@@ -192,6 +192,7 @@ static void __init gic_clocksource_of_init(struct device_node *node)
 		}
 
 		gic_frequency = clk_get_rate(clk);
+		pr_info("GIC: timer frequency %d MHZ\n", gic_frequency / 1000000);
 	} else if (of_property_read_u32(node, "clock-frequency",
 					&gic_frequency)) {
 		pr_err("GIC frequency not specified.\n");

@@ -1,0 +1,234 @@
+/*
+ * Baikal-T FPGA device tree.
+ *
+ * Copyright (C) 2014,2015  Baikal Electronics JSC
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
+
+#include <dt-bindings/interrupt-controller/mips-gic.h>
+
+#define FPGA_CPU_FREQ	8000000
+#define FPGA_GIC_FREQ	(FPGA_CPU_FREQ / 2)
+#define FPGA_APB_FREQ	50000000
+#define FPGA_UART_FREQ	12500000
+
+/dts-v1/;
+
+/ {
+	model = "Baikal FPGA board";
+	compatible = "baikal,mips";
+	#address-cells = <1>;
+	#size-cells = <1>;
+	interrupt-parent = <&gic>;
+
+	aliases {
+		gic = &gic;
+		serial0 = &uart0;
+		serial1 = &uart1;
+	};
+
+	chosen {
+		bootargs = "root=/dev/ram rw console=ttyS0,mmio32,38400 earlyprintk=uart8250,mmio32,0x1F04A000,38400 nocoherentio nol2par nol1par";
+	};
+
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		CPU0: cpu@0 {
+			device_type = "cpu";
+			compatible = "mti,p5600";
+			reg = <0x0>;
+			clocks = <&cpu_clk 0>;
+			clock-names = "cpuclk";
+		};
+
+		CPU1: cpu@1 {
+			device_type = "cpu";
+			compatible = "mti,p5600";
+			reg = <0x1>;
+			clocks = <&cpu_clk 0>;
+			clock-names = "cpuclk";
+		};
+	};
+
+	memory {
+		device_type = "memory";
+		reg = <0x00000000 0x08000000>;
+	};
+
+	gic: gic@1BDC0000 {
+		compatible = "mti,gic";
+		reg = <0x1BDC0000 0x20000>;
+
+		interrupt-controller;
+		#interrupt-cells = <3>;
+
+		timer:timer {
+			compatible = "mti,gic-timer";
+			interrupts = <GIC_LOCAL 1 IRQ_TYPE_NONE>;
+			clock-frequency = <FPGA_GIC_FREQ>;
+			clocks = <&gic_clk 0>;
+			clock-names = "gicclk";
+		};
+	};
+
+	axi {
+		compatible = "simple-bus";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		interrupt-parent = <&gic>;
+
+		ranges;
+
+		apb_ehb@1F059000 {
+			compatible = "be,apb-ehb";
+			reg = <0x1f059000 0x1000>;
+			interrupts = <GIC_SHARED 16 IRQ_TYPE_LEVEL_HIGH>;
+		};
+
+		axi_ehb@1F04D110 {
+			compatible = "be,axi-ehb";
+			reg = <0x1F04D110 0x8>;
+			interrupts = <GIC_SHARED 127 IRQ_TYPE_LEVEL_HIGH>;
+		};
+	};
+
+	apb {
+		compatible = "simple-bus";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		interrupt-parent = <&gic>;
+
+		ranges;
+
+		timer0: timer0@1F049000 {
+			compatible = "snps,dw-apb-timer-osc";
+			interrupts = <GIC_SHARED 24 IRQ_TYPE_LEVEL_HIGH>;
+			reg = <0x1F049000 0x14>;
+			clocks = <&timer0_clk 0>;
+			clock-names = "timer";
+		};
+
+		timer1: timer1@1F049014 {
+			compatible = "snps,dw-apb-timer-sp";
+			reg = <0x1F049014 0x14>;
+			interrupts = <GIC_SHARED 25 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&timer1_clk 0>;
+			clock-names = "timer";
+		};
+
+		timer2: timer2@1F049028 {
+			compatible = "snps,dw-apb-timer-sp";
+			reg = <0x1F049028 0x14>;
+			interrupts = <GIC_SHARED 26 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&timer2_clk 0>;
+			clock-names = "timer";
+		};
+
+		uart0: serial0@1F04A000 {
+			compatible = "snps,dw-apb-uart";
+			reg = <0x1F04A000 0x1000>;
+			interrupts = <GIC_SHARED 48 IRQ_TYPE_LEVEL_HIGH>;
+			reg-shift = <2>;
+			reg-io-width = <4>;
+			clocks = <&uart_clk 0>, <&apb_clk 0>;
+			clock-names = "baudclk", "apb_pclk";
+		};
+
+		uart1: serial1@1F04B000 {
+			compatible = "snps,dw-apb-uart";
+			reg = <0x1F04B000 0x1000>;
+			interrupts = <GIC_SHARED 49 IRQ_TYPE_LEVEL_HIGH>;
+			reg-shift = <2>;
+			reg-io-width = <4>;
+			clocks = <&uart_clk 0>, <&apb_clk 0>;
+			clock-names = "baudclk", "apb_pclk";
+		};
+	};
+
+	clocks {
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		ranges;
+
+		cpu_clk:cpu_clk {
+			compatible = "fixed-clock";
+			#clock-cells = <1>;
+			clock-frequency  = <FPGA_CPU_FREQ>;
+			clock-output-names = "cpuclk";
+		};
+
+		gic_clk:gic_clk {
+			compatible = "fixed-clock";
+			#clock-cells = <1>;
+			clock-frequency  = <FPGA_GIC_FREQ>;
+			clock-output-names = "gicclk";
+		};
+
+		div_1m:div_1m {
+			compatible = "fixed-clock";
+			#clock-cells = <1>;
+			clock-frequency  = <1000000>;
+			clock-output-names = "div1m";
+		};
+
+		apb_clk:apb_clk@1F04D064 {
+			compatible = "fixed-clock";
+			#clock-cells = <1>;
+			clock-frequency  = <FPGA_APB_FREQ>;
+			clock-output-names = "apbclk";
+		};
+
+		uart_clk:uart_clk@ {
+			compatible = "fixed-clock";
+			#clock-cells = <1>;
+			clock-frequency  = <FPGA_UART_FREQ>;
+			clock-output-names = "baudclk";
+		};
+
+		timer0_clk:timer0_clk {
+			compatible = "fixed-factor-clock";
+			#clock-cells = <1>;
+			clocks = <&apb_clk 0>;
+			clock-div = <1>;
+			clock-mult = <1>;
+			clock-names = "div1m";
+			clock-output-names = "timer0clk";
+		};
+
+		timer1_clk:timer1_clk {
+			compatible = "fixed-factor-clock";
+			#clock-cells = <1>;
+			clocks = <&apb_clk 0>;
+			clock-div = <1>;
+			clock-mult = <1>;
+			clock-names = "div1m";
+			clock-output-names = "timer1clk";
+		};
+
+		timer2_clk:timer2_clk {
+			compatible = "fixed-factor-clock";
+			#clock-cells = <1>;
+			clocks = <&apb_clk 0>;
+			clock-div = <1>;
+			clock-mult = <1>;
+			clock-names = "div1m";
+			clock-output-names = "timer2clk";
+		};
+	};
+};

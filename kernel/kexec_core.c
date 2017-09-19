@@ -728,7 +728,12 @@ static int kimage_load_normal_segment(struct kimage *image,
 		char *ptr;
 		size_t uchunk, mchunk;
 
+#ifdef CONFIG_MIPS_BAIKAL
+		page = kimage_alloc_page(image, GFP_USER, maddr);
+#else
 		page = kimage_alloc_page(image, GFP_HIGHUSER, maddr);
+#endif
+
 		if (!page) {
 			result  = -ENOMEM;
 			goto out;

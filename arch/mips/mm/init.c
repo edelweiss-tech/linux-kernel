@@ -37,7 +37,6 @@
 #include <asm/cpu.h>
 #include <asm/dma.h>
 #include <asm/kmap_types.h>
-#include <asm/maar.h>
 #include <asm/mmu_context.h>
 #include <asm/sections.h>
 #include <asm/pgtable.h>
@@ -268,7 +267,12 @@ unsigned __weak platform_maar_init(unsigned num_pairs)
 			continue;
 		}
 
-		skip = 0x10000 - (boot_mem_map.map[i].addr & 0xffff);
+		if (boot_mem_map.map[i].addr == 0) {
+			continue; // alm: exclude kernel region.
+			skip = (0x0FFFFFFF & MAX_DMA_ADDRESS);
+		} else {
+			skip = 0x10000 - (boot_mem_map.map[i].addr & 0xffff);
+		}
 
 		cfg[num_cfg].lower = boot_mem_map.map[i].addr;
 		cfg[num_cfg].lower += skip;
@@ -354,6 +358,7 @@ void maar_init(void)
 		if (attr & MIPS_MAAR_S)
 			pr_cont(" speculate");
 
+		pr_cont(" maarvh = 0x%x", readx_c0_maar()); //alm
 		pr_cont("\n");
 
 		/* Record the setup for use on secondary CPUs */
@@ -460,7 +465,9 @@ void __init mem_init(void)
 #endif
 	high_memory = (void *) __va(max_low_pfn << PAGE_SHIFT);
 
+#ifndef CONFIG_MACH_BAIKAL_QEMU
 	maar_init();
+#endif
 	free_all_bootmem();
 	setup_zero_pages();	/* Setup zeroed pages.  */
 	mem_init_free_highmem();

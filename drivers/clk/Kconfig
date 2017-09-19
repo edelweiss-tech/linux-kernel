@@ -188,6 +188,13 @@ config COMMON_CLK_CDCE706
 	---help---
 	  This driver supports TI CDCE706 programmable 3-PLL clock synthesizer.
 
+config COMMON_CLK_BAIKAL
+	bool "Clock driver for Baikal SoCs"
+	default y
+	depends on ARCH_BAIKAL && OF
+	---help---
+	  Support for the Baikal Electronicse SoC reference, PLL, and device clocks.
+
 source "drivers/clk/bcm/Kconfig"
 source "drivers/clk/hisilicon/Kconfig"
 source "drivers/clk/qcom/Kconfig"

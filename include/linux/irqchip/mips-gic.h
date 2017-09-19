@@ -246,6 +246,25 @@
 #define GIC_SHARED_TO_HWIRQ(x)	(GIC_SHARED_HWIRQ_BASE + (x))
 #define GIC_HWIRQ_TO_SHARED(x)	((x) - GIC_SHARED_HWIRQ_BASE)
 
+#define GIC_WD_CTRL_START_SHFT	0
+#define GIC_WD_CTRL_START_MSK	(MSK(1) << GIC_WD_CTRL_START_SHFT)
+#define GIC_WD_CTRL_TYPE_SHFT	1
+#define GIC_WD_CTRL_TYPE_MSK	(MSK(3) << GIC_WD_CTRL_START_SHFT)
+#define GIC_WD_CTRL_DBG_SHFT	4
+#define GIC_WD_CTRL_DBG_MSK		(MSK(1) << GIC_WD_CTRL_DBG_SHFT)
+#define GIC_WD_CTRL_WAIT_SHFT	5
+#define GIC_WD_CTRL_WAIT_MSK	(MSK(1) << GIC_WD_CTRL_WAIT_SHFT)
+#define GIC_WD_CTRL_WDINTR_SHFT	6
+#define GIC_WD_CTRL_WDINTR_MSK	(MSK(1) << GIC_WD_CTRL_WDINTR_SHFT)
+#define GIC_WD_CTRL_WDRST_SHFT	7
+#define GIC_WD_CTRL_WDRST_MSK	(MSK(1) << GIC_WD_CTRL_WDRST_SHFT)
+#define GIC_WD_CTRL_GEN_SHFT	8
+#define GIC_WD_CTRL_GEN_MSK		(MSK(1) << GIC_WD_CTRL_GEN_SHFT)
+
+#define GIC_WD_CTRL_TYPE_SC		0
+#define GIC_WD_CTRL_TYPE_OT		1
+#define GIC_WD_CTRL_TYPE_PIT	2
+
 #ifdef CONFIG_MIPS_GIC
 
 extern unsigned int gic_present;
@@ -261,9 +280,21 @@ extern void gic_write_compare(cycle_t cnt);
 extern void gic_write_cpu_compare(cycle_t cnt, int cpu);
 extern void gic_start_count(void);
 extern void gic_stop_count(void);
+extern unsigned int gic_read_wd_ctrl(void);
+extern void gic_write_wd_ctrl(unsigned int ctrl);
+extern void gic_write_cpu_wd_ctrl(unsigned int ctrl, int cpu);
+extern void gic_start_wd(void);
+extern void gic_start_cpu_wd(int cpu);
+extern void gic_stop_wd(void);
+extern void gic_stop_cpu_wd(int cpu);
+extern unsigned int gic_read_wd_count(void);
+extern unsigned int gic_read_wd_initial(void);
+extern void gic_write_wd_initial(unsigned int cnt);
+extern void gic_write_cpu_wd_initial(unsigned int cnt, int cpu);
 extern void gic_send_ipi(unsigned int intr);
 extern unsigned int plat_ipi_call_int_xlate(unsigned int);
 extern unsigned int plat_ipi_resched_int_xlate(unsigned int);
+extern int gic_get_c0_wd_int(void);
 extern int gic_get_c0_compare_int(void);
 extern int gic_get_c0_perfcount_int(void);
 extern int gic_get_c0_fdc_int(void);

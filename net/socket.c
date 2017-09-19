@@ -1829,6 +1829,13 @@ static int copy_msghdr_from_user(struct msghdr *kmsg,
 	size_t nr_segs;
 	ssize_t err;
 
+#if CONFIG_MIPS_BAIKAL
+/* Temporary fix for Baikal CPU branch, TODO ... */
+#warning temporary fix: user_msghdr * & user_msghdr->msg_iov * are checked to be not null
+	if (!umsg || !umsg->msg_iov)
+		return -EFAULT;
+#endif
+
 	if (!access_ok(VERIFY_READ, umsg, sizeof(*umsg)) ||
 	    __get_user(uaddr, &umsg->msg_name) ||
 	    __get_user(kmsg->msg_namelen, &umsg->msg_namelen) ||
@@ -1888,6 +1895,13 @@ static int ___sys_sendmsg(struct socket *sock, struct user_msghdr __user *msg,
 	ssize_t err;
 
 	msg_sys->msg_name = &address;
+
+#if CONFIG_MIPS_BAIKAL
+/* Temporary fix for Baikal CPU branch, TODO ... */
+#warning temporary fix: msghdr * & user_msghdr * are checked to be not null
+	if (!msg || !msg_sys)
+		return -EFAULT;
+#endif
 
 	if (MSG_CMSG_COMPAT & flags)
 		err = get_compat_msghdr(msg_sys, msg_compat, NULL, &iov);

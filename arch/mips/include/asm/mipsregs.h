@@ -61,6 +61,7 @@
 #define CP0_EPC $14
 #define CP0_PRID $15
 #define CP0_EBASE $15, 1
+#define CP0_CDMMBASE $15, 2
 #define CP0_CMGCRBASE $15, 3
 #define CP0_CONFIG $16
 #define CP0_CONFIG3 $16, 3
@@ -493,6 +494,15 @@
 #define MIPS_CONF_AT		(_ULCAST_(3) << 13)
 #define MIPS_CONF_M		(_ULCAST_(1) << 31)
 
+/* Bits specific to the MIPS32R5. */
+#define MIPS32R5_CONF_K23	(_ULCAST_(7) << 28)
+#define MIPS32R5_CONF_KU	(_ULCAST_(7) << 25)
+#define MIPS32R5_CONF_ISP	(_ULCAST_(1) << 24)
+#define MIPS32R5_CONF_DSP	(_ULCAST_(1) << 23)
+#define MIPS32R5_CONF_UDI	(_ULCAST_(1) << 22)
+#define MIPS32R5_CONF_SB	(_ULCAST_(1) << 21)
+#define MIPS32R5_CONF_MM	(_ULCAST_(1) << 18)
+
 /*
  * Bits in the MIPS32/64 PRA coprocessor 0 config registers 1 and above.
  */
@@ -596,17 +606,24 @@
 #define MIPS_CONF5_CV		(_ULCAST_(1) << 29)
 #define MIPS_CONF5_K		(_ULCAST_(1) << 30)
 
+/* Jump register cache prediction disable */
+#define MIPS_CONF6_JRCD		(_ULCAST_(1) << 0)
+/* MIPSr6 enable */
+#define MIPS_CONF6_R6		(_ULCAST_(1) << 2)
 #define MIPS_CONF6_SYND		(_ULCAST_(1) << 13)
 /* proAptiv FTLB on/off bit */
 #define MIPS_CONF6_FTLBEN	(_ULCAST_(1) << 15)
 /* FTLB probability bits */
 #define MIPS_CONF6_FTLBP_SHIFT	(16)
+/* Disable load/store bonding */
+#define MIPS_CONF6_DLSB		(_ULCAST_(1) << 21)
 
 #define MIPS_CONF7_WII		(_ULCAST_(1) << 31)
 
 #define MIPS_CONF7_RPS		(_ULCAST_(1) << 2)
 
 #define MIPS_CONF7_IAR		(_ULCAST_(1) << 10)
+/* Alias removed */
 #define MIPS_CONF7_AR		(_ULCAST_(1) << 16)
 /* FTLB probability bits for R6 */
 #define MIPS_CONF7_FTLBP_SHIFT	(18)
@@ -616,6 +633,10 @@
 #define MIPS_MAAR_ADDR_SHIFT	12
 #define MIPS_MAAR_S		(_ULCAST_(1) << 1)
 #define MIPS_MAAR_V		(_ULCAST_(1) << 0)
+#define MIPS_MAARVH_VH		(_ULCAST_(1) << 31)
+#define MIPS_MAARVH_ADDR	(0xF)
+#define MIPS_MAARVH_ADDR_SHIFT	(20)
+
 
 /* CMGCRBase bit definitions */
 #define MIPS_CMGCRB_BASE	11
@@ -1095,7 +1116,7 @@ do {									\
 	local_irq_restore(__flags);					\
 } while (0)
 
-#define __readx_32bit_c0_register(source)				\
+#define __readx_32bit_c0_register(source, sel)				\
 ({									\
 	unsigned int __res;						\
 									\
@@ -1105,15 +1126,15 @@ do {									\
 	"	.set	mips32r2				\n"	\
 	"	.insn						\n"	\
 	"	# mfhc0 $1, %1					\n"	\
-	"	.word	(0x40410000 | ((%1 & 0x1f) << 11))	\n"	\
+	"	.word	(0x40410000 | ((%1 & 0x1f) << 11) | (%2 & 0x3))	\n"	\
 	"	move	%0, $1					\n"	\
 	"	.set	pop					\n"	\
 	: "=r" (__res)							\
-	: "i" (source));						\
+	: "i" (source), "i" (sel));					\
 	__res;								\
 })
 
-#define __writex_32bit_c0_register(register, value)			\
+#define __writex_32bit_c0_register(register, sel, value)		\
 do {									\
 	__asm__ __volatile__(						\
 	"	.set	push					\n"	\
@@ -1122,10 +1143,10 @@ do {									\
 	"	move	$1, %0					\n"	\
 	"	# mthc0 $1, %1					\n"	\
 	"	.insn						\n"	\
-	"	.word	(0x40c10000 | ((%1 & 0x1f) << 11))	\n"	\
+	"	.word	(0x40c10000 | ((%1 & 0x1f) << 11) | (%2 & 0x3))	\n"	\
 	"	.set	pop					\n"	\
 	:								\
-	: "r" (value), "i" (register));					\
+	: "r" (value), "i" (register), "i" (sel) );					\
 } while (0)
 
 #define read_c0_index()		__read_32bit_c0_register($0, 0)
@@ -1137,14 +1158,17 @@ do {									\
 #define read_c0_entrylo0()	__read_ulong_c0_register($2, 0)
 #define write_c0_entrylo0(val)	__write_ulong_c0_register($2, 0, val)
 
-#define readx_c0_entrylo0()	__readx_32bit_c0_register(2)
-#define writex_c0_entrylo0(val)	__writex_32bit_c0_register(2, val)
+#define readx_c0_entrylo0()	__readx_32bit_c0_register(2, 0)
+#define writex_c0_entrylo0(val)	__writex_32bit_c0_register(2, 0, val)
 
 #define read_c0_entrylo1()	__read_ulong_c0_register($3, 0)
 #define write_c0_entrylo1(val)	__write_ulong_c0_register($3, 0, val)
 
-#define readx_c0_entrylo1()	__readx_32bit_c0_register(3)
-#define writex_c0_entrylo1(val)	__writex_32bit_c0_register(3, val)
+#define readx_c0_entrylo1()	__readx_32bit_c0_register(3, 0)
+#define writex_c0_entrylo1(val)	__writex_32bit_c0_register(3, 0, val)
+
+#define readx_c0_maar()		__readx_32bit_c0_register(17, 1)
+#define writex_c0_maar(val)	__writex_32bit_c0_register(17, 1, val)
 
 #define read_c0_conf()		__read_32bit_c0_register($3, 0)
 #define write_c0_conf(val)	__write_32bit_c0_register($3, 0, val)
@@ -1204,6 +1228,9 @@ do {									\
 #define write_c0_epc(val)	__write_ulong_c0_register($14, 0, val)
 
 #define read_c0_prid()		__read_32bit_c0_register($15, 0)
+
+#define read_c0_cdmm()		__read_ulong_c0_register($15, 2)
+#define write_c0_cdmm(val)	__write_ulong_c0_register($15, 2, val)
 
 #define read_c0_cmgcrbase()	__read_ulong_c0_register($15, 3)
 
