@@ -1,0 +1,430 @@
+#
+# Baikal-T SOC platform support code.
+#
+# Copyright (C) 2014-2016 Baikal Electronics JSC
+#
+# Author:
+#   Dmitry Dunaev <dmitry.dunaev@baikalelectronics.ru>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+
+if MIPS_BAIKAL
+
+choice
+	prompt "Baikal CPU Support"
+	default ARCH_BAIKAL
+
+config ARCH_BAIKAL
+	bool "BAIKAL-T MIPS CPU"
+	select OF_EARLY_FLATTREE
+	select GENERIC_SCHED_CLOCK
+	select NO_IOPORT
+	select SOC_BUS
+	help
+	  Baikal-T (MIPS32 P5600) SoC based systems
+
+endchoice
+
+if ARCH_BAIKAL
+
+choice
+	prompt "Baikal-T Support Boards"
+	default MACH_BAIKAL_BFK
+
+config MACH_BAIKAL_BFK
+	bool "Baikal-T BFK board"
+
+	# Hardware features
+	select HW_HAS_PCI
+	select HW_PERF_EVENTS
+
+	# Errata set
+	select PAGE_SIZE_16KB
+
+	# Common
+	select PHYLIB
+	select DEBUG_LL
+	select TIMER_GENERIC
+	select ARCH_WANT_OPTIONAL_GPIOLIB
+	select SYS_HAS_CPU_MIPS32_R5
+
+	# HW perfomance counters
+	select HAVE_PERF_EVENTS
+	select PERF_EVENTS
+	select HW_PERF_EVENTS
+
+	# Clock source
+	select COMMON_CLK_BAIKAL
+
+	# Serial UART
+	select SERIAL_8250
+	select SERIAL_8250_CONSOLE
+	select SERIAL_8250_EXTENDED
+	select SERIAL_8250_DW
+
+	# WatchDog
+	select DW_WATCHDOG
+
+	# Timers
+	select CLKSRC_OF
+	select DW_APB_TIMER
+	select DW_APB_TIMER_OF
+
+	# I2C Bus support
+	select I2C_DESIGNWARE_CORE
+	select I2C_DESIGNWARE_PLATFORM
+
+	# GPIO support
+	select GPIOLIB
+	select OF_GPIO
+	select GPIO_SYSFS
+	select GPIO_DWAPB
+	select GPIO_GENERIC
+
+	# Gigabit Ethernet support
+	select STMMAC_ETH
+	select STMMAC_PLATFORM
+	select STMMAC_DEBUG_FS
+
+	# SPI bus support
+	select SPI_DESIGNWARE
+	select SPI_DW_MMIO
+
+	# USB Support
+	select USB_DWC3
+	select USB_DWC3_HOST
+	select USB_DWC3_BAIKAL
+	select USB_PHY
+
+	# DTB select
+	select DTB_BAIKAL_BFK
+
+config MACH_BAIKAL_BFK2
+	bool "Baikal-T BFK2 board"
+
+	# Hardware features
+	select HW_HAS_PCI
+	select HW_PERF_EVENTS
+
+	# Errata set
+	select PAGE_SIZE_16KB
+
+	# Common
+	select PHYLIB
+	select DEBUG_LL
+	select TIMER_GENERIC
+	select ARCH_WANT_OPTIONAL_GPIOLIB
+	select SYS_HAS_CPU_MIPS32_R5
+
+	# HW perfomance counters
+	select HAVE_PERF_EVENTS
+	select PERF_EVENTS
+	select HW_PERF_EVENTS
+
+	# Clock source
+	select COMMON_CLK_BAIKAL
+
+	# Serial UART
+	select SERIAL_8250
+	select SERIAL_8250_CONSOLE
+	select SERIAL_8250_EXTENDED
+	select SERIAL_8250_DW
+
+	# WatchDog
+	select DW_WATCHDOG
+
+	# Timers
+	select CLKSRC_OF
+	select DW_APB_TIMER
+	select DW_APB_TIMER_OF
+
+	# I2C Bus support
+	select I2C_DESIGNWARE_CORE
+	select I2C_DESIGNWARE_PLATFORM
+
+	# GPIO support
+	select GPIOLIB
+	select OF_GPIO
+	select GPIO_SYSFS
+	select GPIO_DWAPB
+	select GPIO_GENERIC
+
+	# Gigabit Ethernet support
+	select STMMAC_ETH
+	select STMMAC_PLATFORM
+	select STMMAC_DEBUG_FS
+
+	# SPI bus support
+	select SPI_DESIGNWARE
+	select SPI_DW_MMIO
+
+	# USB Support
+	select USB_DWC3
+	select USB_DWC3_HOST
+	select USB_DWC3_BAIKAL
+	select USB_PHY
+
+	# DTB select
+	select DTB_BAIKAL_BFK2
+
+config MACH_BAIKAL_MODULE
+	bool "Baikal-T Module board"
+
+	# Hardware features
+	select HW_HAS_PCI
+	select HW_PERF_EVENTS
+
+	# Errata set
+	select PAGE_SIZE_16KB
+
+	# Common
+	select PHYLIB
+	select DEBUG_LL
+	select TIMER_GENERIC
+	select ARCH_WANT_OPTIONAL_GPIOLIB
+	select SYS_HAS_CPU_MIPS32_R5
+
+	# HW perfomance counters
+	select HAVE_PERF_EVENTS
+	select PERF_EVENTS
+	select HW_PERF_EVENTS
+
+	# Clock source
+	select COMMON_CLK_BAIKAL
+
+	# Serial UART
+	select SERIAL_8250
+	select SERIAL_8250_CONSOLE
+	select SERIAL_8250_EXTENDED
+	select SERIAL_8250_DW
+
+	# WatchDog
+	select DW_WATCHDOG
+
+	# Timers
+	select CLKSRC_OF
+	select DW_APB_TIMER
+	select DW_APB_TIMER_OF
+
+	# I2C Bus support
+	select I2C_DESIGNWARE_CORE
+	select I2C_DESIGNWARE_PLATFORM
+
+	# GPIO support
+	select GPIOLIB
+	select OF_GPIO
+	select GPIO_SYSFS
+	select GPIO_DWAPB
+	select GPIO_GENERIC
+
+	# Gigabit Ethernet support
+	select STMMAC_ETH
+	select STMMAC_PLATFORM
+	select STMMAC_DEBUG_FS
+
+	# SPI bus support
+	select SPI_DESIGNWARE
+	select SPI_DW_MMIO
+
+	# USB Support
+	select USB_DWC3
+	select USB_DWC3_HOST
+	select USB_DWC3_BAIKAL
+	select USB_PHY
+
+	# DTB select
+	select DTB_BAIKAL_MODULE
+
+	help
+	  Machine support for Baikal-T SOC family
+
+config MACH_BAIKAL_QEMU
+	bool "Baikal-T QEMU simulator"
+
+	# Errata set
+	select PAGE_SIZE_16KB
+
+	# Common
+	select PHYLIB
+	select DEBUG_LL
+	select TIMER_GENERIC
+	select ARCH_WANT_OPTIONAL_GPIOLIB
+
+	# Clock source
+	select COMMON_CLK_BAIKAL
+
+	# Serial UART
+	select SERIAL_8250
+	select SERIAL_8250_CONSOLE
+	select SERIAL_8250_EXTENDED
+	select SERIAL_8250_DW
+
+	# WatchDog
+	select DW_WATCHDOG
+
+	# Timers
+	select CLKSRC_OF
+	select DW_APB_TIMER
+	select DW_APB_TIMER_OF
+
+	# I2C Bus support
+	select I2C_DESIGNWARE_CORE
+	select I2C_DESIGNWARE_PLATFORM
+
+	# GPIO support
+	select GPIOLIB
+	select OF_GPIO
+	select GPIO_SYSFS
+	select GPIO_DWAPB
+	select GPIO_GENERIC
+
+	# Gigabit Ethernet support
+	select STMMAC_ETH
+	select STMMAC_PLATFORM
+	select STMMAC_DEBUG_FS
+
+	# SPI bus support
+	select SPI_DESIGNWARE
+	select SPI_DW_MMIO
+
+	# DTB select
+	select DTB_BAIKAL_QEMU
+
+config MACH_BAIKAL_FPGA
+	bool "Baikal-T FPGA board"
+
+	# Errata set
+	select PAGE_SIZE_16KB
+
+	# Common
+	select DEBUG_LL
+	select TIMER_GENERIC
+
+	# Serial UART
+	select SERIAL_8250
+	select SERIAL_8250_CONSOLE
+	select SERIAL_8250_EXTENDED
+	select SERIAL_8250_DW
+
+	# Timers
+	select CLKSRC_OF
+	select DW_APB_TIMER
+	select DW_APB_TIMER_OF
+
+	# DTB select
+	select DTB_BAIKAL_FPGA
+
+endchoice
+
+choice
+        prompt "Baikal Board configs"
+        default DTB_BAIKAL
+
+config DTB_BAIKAL
+	bool "Baikal-T generic board"
+	help
+	  Generic device tree for common boards
+	  based on Baikal-T SOC family. Contains
+	  only devices included in basic SOC
+	  configuration.
+
+config DTB_BAIKAL_BFK
+	bool "Baikal-T BFK board"
+	help
+	  Device tree for BFK boards (for versions 1.0, 1.5, 1.6)
+	  based on Baikal-T SOC.
+
+config DTB_BAIKAL_BFK2
+	bool "Baikal-T BFK2 board"
+	help
+	  Device tree for BFK2 boards (for versions 2.x)
+	  based on Baikal-T SOC.
+
+config DTB_BAIKAL_MODULE
+	bool "Baikal-T 'Module' board"
+	help
+	  Device tree for Baikal-T 'Module' board.
+	  Common device configuration.
+
+config DTB_BAIKAL_QEMU
+	bool "Baikal-T QEMU simulator"
+	help
+	  Device tree for QEMU simulator.
+
+config DTB_BAIKAL_FPGA
+	bool "Baikal-T FPGA board"
+	help
+	  Device tree for Baikal-T FPGA prototype.
+	  Simple device configuration.
+
+	help
+	  Select device tree for Baikal-T SOC based board
+
+config DTB_BAIKAL_MITX
+	bool "Baikal-T MITX board"
+	help
+	  Device tree for T-Platforms mITX boards
+	  based on Baikal-T SOC.
+endchoice
+
+config ARCH_NR_GPIO
+	int "Baikal GPIOs plus architecture specific ones"
+	range 32 512
+	default 40 if MACH_BAIKAL_BFK
+	default 40 if MACH_BAIKAL_BFK2
+	default 48 if MACH_BAIKAL_MODULE
+	default 32
+	help
+	  Maximum number of GPIOs in the system.
+
+	  If unsure, leave the default value.
+
+config MIPS_BAIKAL_PCI_DMA
+	bool "PCI DMA support"
+	default n
+
+menuconfig BAIKAL_ERRATA
+	bool "Baikal SoC Errata Fix"
+	help
+	  Select this option if you want to fix known Baikal Errata
+
+if BAIKAL_ERRATA
+
+config BAIKAL_ERRATA_XGMAC
+	bool "Fix for MMD Devices in package registers swap in XGMAC"
+	help
+	  Fix for MMD Devices in package registers swap in XGMAC in
+	  early Baikal-T SoCs
+
+	  If unsure, say Y.
+
+config BAIKAL_ERRATA_GMAC
+	bool "Fix for GMAC block speed 10/100M"
+	help
+	  Fix for GMAC block speed 10/100M in early Baikal-T SoCs
+
+	  If unsure, say N.
+
+config BAIKAL_ERRATA_GBE_PHY_MICREL
+	bool "Fix for Micrel PHY RX delay on BFK board"
+	help
+	  Fix for Micrel PHY RX delay on early revisions of BFK board (v1.0)
+
+	  If unsure, say N.
+
+endif # BAIKAL_ERRATA
+endif # ARCH_BAIKAL
+endif # MACH_BAIKAL
+
+config SYS_HAS_CPU_MIPS32_R5
+	bool
+	default n
