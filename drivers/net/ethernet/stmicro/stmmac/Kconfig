@@ -37,6 +37,16 @@ config DWMAC_GENERIC
 	  platform specific code to function or is using platform
 	  data for setup.
 
+config DWMAC_BAIKAL
+	tristate "Baikal Electronics DWMAC support"
+	default ARCH_BAIKAL
+	depends on OF
+	help
+	  Support for Baikal Electronics DWMAC Ethernet.
+
+	  This selects the Baikal-T SoC glue layer support for the stmmac
+	  device driver.
+
 config DWMAC_IPQ806X
 	tristate "QCA IPQ806x DWMAC support"
 	default ARCH_QCOM
