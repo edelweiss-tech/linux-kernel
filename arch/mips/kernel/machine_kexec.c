@@ -96,14 +96,14 @@ machine_kexec(struct kimage *image)
 			*ptr = (unsigned long) phys_to_virt(*ptr);
 	}
 
+	printk("Will call new kernel at %08lx\n", image->start);
+	printk("Bye ...\n");
+	__flush_cache_all();
+
 	/*
 	 * we do not want to be bothered.
 	 */
 	local_irq_disable();
-
-	printk("Will call new kernel at %08lx\n", image->start);
-	printk("Bye ...\n");
-	__flush_cache_all();
 #ifdef CONFIG_SMP
 	/* All secondary cpus now may jump to kexec_wait cycle */
 	relocated_kexec_smp_wait = reboot_code_buffer +
