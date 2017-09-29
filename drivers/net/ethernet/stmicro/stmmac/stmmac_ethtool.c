@@ -363,7 +363,6 @@ static int stmmac_ethtool_setsettings(struct net_device *dev,
 {
 	struct stmmac_priv *priv = netdev_priv(dev);
 	struct phy_device *phy = priv->phydev;
-	int rc;
 
 	if (priv->hw->pcs & STMMAC_PCS_RGMII ||
 	    priv->hw->pcs & STMMAC_PCS_SGMII) {
@@ -391,11 +390,7 @@ static int stmmac_ethtool_setsettings(struct net_device *dev,
 		return 0;
 	}
 
-	spin_lock(&priv->lock);
-	rc = phy_ethtool_sset(phy, cmd);
-	spin_unlock(&priv->lock);
-
-	return rc;
+	return phy_ethtool_sset(phy, cmd);
 }
 
 static u32 stmmac_ethtool_getmsglevel(struct net_device *dev)
