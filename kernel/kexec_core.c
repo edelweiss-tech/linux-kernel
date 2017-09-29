@@ -748,7 +748,7 @@ static int kimage_load_normal_segment(struct kimage *image,
 		char *ptr;
 		size_t uchunk, mchunk;
 
-		page = kimage_alloc_page(image, GFP_HIGHUSER, maddr);
+		page = kimage_alloc_page(image, GFP_KEXEC, maddr);
 		if (!page) {
 			result  = -ENOMEM;
 			goto out;
