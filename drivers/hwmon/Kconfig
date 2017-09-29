@@ -1559,6 +1559,15 @@ config SENSORS_TC74
 	  This driver can also be built as a module.  If so, the module
 	  will be called tc74.
 
+config SENSORS_PVT
+	tristate "Baikal PVT"
+	help
+	  If you say yes here you get support for Baikal PVT single
+	  input temperature sensor chips.
+
+	  This driver can also be built as a module.  If so, the module
+	  will be called pvt.
+
 config SENSORS_THMC50
 	tristate "Texas Instruments THMC50 / Analog Devices ADM1022"
 	depends on I2C
