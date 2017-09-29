@@ -1,0 +1,65 @@
+# 
+# Baikal-T FPGA default kernel configuration
+#
+# Copyright (C) 2014-2016 Baikal Electronics JSC
+# 
+# Author:
+#   Dmitry Dunaev <dmitry.dunaev@baikalelectronics.ru>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+CONFIG_MIPS_BAIKAL=y
+CONFIG_MACH_BAIKAL_FPGA=y
+CONFIG_CPU_MIPS32_3_5_FEATURES=y
+CONFIG_PAGE_SIZE_16KB=y
+CONFIG_MIPS_CPS=y
+CONFIG_NR_CPUS=2
+CONFIG_HZ_100=y
+CONFIG_LOCALVERSION="-fpga"
+CONFIG_DEFAULT_HOSTNAME="baikal"
+CONFIG_FHANDLE=y
+CONFIG_NO_HZ_IDLE=y
+CONFIG_HIGH_RES_TIMERS=y
+CONFIG_LOG_CPU_MAX_BUF_SHIFT=17
+CONFIG_NAMESPACES=y
+CONFIG_BLK_DEV_INITRD=y
+CONFIG_INITRAMFS_SOURCE="../../img/initramfs.gz"
+CONFIG_CC_OPTIMIZE_FOR_SIZE=y
+CONFIG_EMBEDDED=y
+CONFIG_SLAB=y
+CONFIG_UEVENT_HELPER_PATH="/sbin/hotplug"
+CONFIG_DEVTMPFS=y
+CONFIG_DEVTMPFS_MOUNT=y
+CONFIG_DEBUG_DRIVER=y
+CONFIG_DEBUG_DEVRES=y
+CONFIG_SERIAL_8250_NR_UARTS=2
+CONFIG_SERIAL_8250_RUNTIME_UARTS=2
+CONFIG_PROC_KCORE=y
+CONFIG_TMPFS=y
+CONFIG_TMPFS_POSIX_ACL=y
+CONFIG_PRINTK_TIME=y
+CONFIG_DYNAMIC_DEBUG=y
+CONFIG_DEBUG_INFO=y
+CONFIG_DEBUG_FS=y
+CONFIG_DEBUG_SECTION_MISMATCH=y
+CONFIG_DEBUG_MEMORY_INIT=y
+CONFIG_LOCKUP_DETECTOR=y
+CONFIG_BOOTPARAM_SOFTLOCKUP_PANIC=y
+CONFIG_DEBUG_WW_MUTEX_SLOWPATH=y
+CONFIG_PROVE_LOCKING=y
+CONFIG_LOCK_STAT=y
+CONFIG_DEBUG_LOCKDEP=y
+CONFIG_DEBUG_ATOMIC_SLEEP=y
+CONFIG_SPARSE_RCU_POINTER=y

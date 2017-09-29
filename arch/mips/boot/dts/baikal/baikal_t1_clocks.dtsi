@@ -1,0 +1,375 @@
+/*
+ * Baikal-T1 SOC clock tree.
+ *
+ * Copyright (C) 2014,2015  Baikal Electronics OJSC
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
+
+/ {
+	clocks {
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		ranges;
+
+		/*** external oscillator ****/
+		osc25: oscillator@0 {
+			compatible = "fixed-clock";
+			#clock-cells = <1>;
+			clock-frequency  = <25000000>;
+			clock-output-names = "osc25";
+		};
+        
+
+        /*** primary clock domains ***/
+
+		core_pll: core_pll@1F04D000 {
+			compatible = "be,pmu-pll-clock";
+			#clock-cells = <1>;
+			clocks = <&osc25 0>;
+			clock-names = "ref";
+			reg = <0x1F04D000 0x0008>;
+			clock-output-names = "corepll";
+		};
+
+		sata_pll: sata_pll@1F04D008 {
+			compatible = "be,pmu-pll-clock";
+			#clock-cells = <1>;
+			clocks = <&osc25 0>;
+			clock-names = "ref";
+			reg = <0x1F04D008 0x0008>;
+			clock-output-names = "satapll";
+		};
+
+		ddr_pll: ddr_pll@1F04D010 {
+			compatible = "be,pmu-pll-clock";
+			#clock-cells = <1>;
+			clocks = <&osc25 0>;
+			clock-names = "ref";
+			reg = <0x1F04D010 0x0008>;
+			clock-output-names = "ddrpll";
+		};
+
+		pcie_pll: pcie_pll@1F04D018 {
+			compatible = "be,pmu-pll-clock";
+			#clock-cells = <1>;
+			clocks = <&osc25 0>;
+			clock-names = "ref";
+			reg = <0x1F04D018 0x0008>;
+			clock-output-names = "pciepll";
+		};
+
+		eth_pll: eth_pll@1F04D020 {
+			compatible = "be,pmu-pll-clock";
+			#clock-cells = <1>;
+			clocks = <&osc25 0>;
+			clock-names = "ref";
+			reg = <0x1F04D020 0x0008>;
+			clock-output-names = "ethpll";
+		};
+
+
+        /******** clocks ********/
+
+        /** core_pll domain **/
+		cpu_clk:cpu_clk {
+			compatible = "fixed-factor-clock";
+			clocks = <&core_pll 0>;
+			clock-names = "corepll";
+			#clock-cells = <0>;
+			clock-div = <1>;
+			clock-mult = <1>;
+			clock-output-names = "cpuclk";
+		};
+
+		gic_clk:gic_clk {
+			compatible = "fixed-factor-clock";
+			clocks = <&core_pll 0>;
+			clock-names = "corepll";
+			#clock-cells = <0>;
+			clock-div = <1>;
+			clock-mult = <1>;
+			clock-output-names = "gicclk";
+		};
+
+        /** pcie_pll domain **/
+		axi_clk:axi_clk {
+			compatible = "fixed-factor-clock";
+			clocks = <&pcie_pll 0>;
+			clock-names = "pciepll";
+			#clock-cells = <0>;
+			clock-div = <2>;
+			clock-mult = <1>;
+			clock-output-names = "axiclk";
+		};
+
+		apb_clk:apb_clk@1F04D064 {
+			compatible = "be,pmu-device-clock";
+			#clock-cells = <1>;
+			clocks = <&pcie_pll 0>;
+			clock-names = "pciepll";
+			reg = <0x1F04D064 0x0004>;
+			clock-output-names = "apbclk";
+			divider-width = <5>;
+		};
+
+		pci_phy_clk:pci_phy_clk@1F04D05C {
+			compatible = "be,pmu-device-clock";
+			#clock-cells = <1>;
+			clocks = <&pcie_pll 0>;
+			clock-names = "pciepll";
+			reg = <0x1F04D05C 0x0004>;
+			clock-output-names = "pciphyclk";
+			divider-width = <4>;
+			nobypass;
+		};
+
+        /** sata_pll domain **/
+		sata_clk:sata_clk@1F04D060 {
+			compatible = "be,pmu-device-clock";
+			#clock-cells = <1>;
+			clocks = <&sata_pll 0>;
+			clock-names = "sataclk";
+			reg = <0x1F04D060 0x0004>;
+			clock-output-names = "sataclk";
+			divider-width = <4>;
+			nobypass;
+		};
+
+        /** eth_pll domain **/
+		div_125m:div_125m {
+			compatible = "fixed-factor-clock";
+			clocks = <&eth_pll 0>;
+			clock-names = "ethpll";
+			#clock-cells = <1>;
+			clock-div = <5>;
+			clock-mult = <1>;
+			clock-output-names = "div125m";
+		};
+
+		div_156m:div_156m {
+			compatible = "fixed-factor-clock";
+			clocks = <&eth_pll 0>;
+			clock-names = "ethpll";
+			#clock-cells = <1>;
+			clock-div = <4>;
+			clock-mult = <1>;
+			clock-output-names = "div156m";
+		};
+
+        uart_clk:uart_clk@1F04D084 {
+            compatible = "be,pmu-device-clock";
+            #clock-cells = <1>;
+            clocks = <&eth_pll 0>;
+            clock-names = "ethpll";
+            reg = <0x1F04D084 0x0004>;
+            clock-output-names = "baudclk";
+            divider-width = <9>;
+        };
+        
+        /** osc25 derivatives **/
+		timer0_clk:timer0_clk@1F04D088 {
+			compatible = "be,pmu-device-clock";
+			#clock-cells = <1>;
+			clocks = <&osc25 0>;
+			clock-names = "ref";
+			reg = <0x1F04D088 0x0004>;
+			clock-output-names = "timer0clk";
+			divider-width = <17>;
+		};
+
+		timer1_clk:timer1_clk@1F04D08C {
+			compatible = "be,pmu-device-clock";
+			#clock-cells = <1>;
+			clocks = <&osc25 0>;
+			clock-names = "ref";
+			reg = <0x1F04D08C 0x0004>;
+			clock-output-names = "timer1clk";
+			divider-width = <17>;
+		};
+
+		timer2_clk:timer2_clk@1F04D090 {
+			compatible = "be,pmu-device-clock";
+			#clock-cells = <1>;
+			clocks = <&osc25 0>;
+			clock-names = "ref";
+			reg = <0x1F04D090 0x0004>;
+			clock-output-names = "timer2clk";
+			divider-width = <17>;
+		};
+
+		gpio_clk:gpio_clk {
+			compatible = "fixed-factor-clock";
+			clocks = <&osc25 0>;
+			clock-names = "ref";
+			#clock-cells = <0>;
+			clock-div = <25>;
+			clock-mult = <1>;
+			clock-output-names = "gpioclk";
+			clock-output = "gpio_clk";
+		};
+
+		pvt_clk:pvt_clk {
+			compatible = "fixed-factor-clock";
+			clocks = <&osc25 0>;
+			clock-names = "osc25";
+			#clock-cells = <0>;
+			clock-div = <21>;
+			clock-mult = <1>;
+			clock-output-names = "pvtclk";
+		};
+
+		div_1m:div_1m {
+			compatible = "fixed-factor-clock";
+			clocks = <&osc25 0>;
+			clock-names = "osc25";
+			#clock-cells = <0>;
+			clock-div = <25>;
+			clock-mult = <1>;
+			clock-output-names = "div1m";
+		};
+
+        /*** secondary clock domains ***/
+        
+        /** pcie_pll -> apb_clk domain **/
+		dma_clk:dma_clk {
+			compatible = "fixed-factor-clock";
+			clocks = <&apb_clk 0>;
+			clock-names = "apbclk";
+			#clock-cells = <0>;
+			clock-div = <1>;
+			clock-mult = <1>;
+			clock-output-names = "dmaclk";
+			clock-output = "hclk";
+		};
+
+		spi0_clk:spi0_clk {
+			compatible = "fixed-factor-clock";
+			clocks = <&apb_clk 0>;
+			clock-names = "apbclk";
+			#clock-cells = <0>;
+			clock-div = <1>;
+			clock-mult = <1>;
+			clock-output-names = "spi0clk";
+		};
+
+		spi1_clk:spi1_clk {
+			compatible = "fixed-factor-clock";
+			clocks = <&apb_clk 0>;
+			clock-names = "apbclk";
+			#clock-cells = <0>;
+			clock-div = <1>;
+			clock-mult = <1>;
+			clock-output-names = "spi1clk";
+		};
+
+		boot_clk:boot_clk {
+			compatible = "fixed-factor-clock";
+			clocks = <&apb_clk 0>;
+			clock-names = "apbclk";
+			#clock-cells = <0>;
+			clock-div = <1>;
+			clock-mult = <1>;
+			clock-output-names = "bootclk";
+		};
+
+        /** eth_pll -> div_125m domain **/
+		gmac0_clk:gmac0_clk@1F04D068 {
+			compatible = "be,pmu-device-clock";
+			#clock-cells = <1>;
+			clocks = <&div_125m 0>;
+			clock-names = "div125m";
+			reg = <0x1F04D068 0x0004>;
+			clock-output-names = "gmac0clk";
+			divider-width = <0>;
+		};
+
+		gmac1_clk:gmac1_clk@1F04D06C {
+			compatible = "be,pmu-device-clock";
+			#clock-cells = <1>;
+			clocks = <&div_125m 0>;
+			clock-names = "div125m";
+			reg = <0x1F04D06C 0x0004>;
+			clock-output-names = "gmac1clk";
+			divider-width = <0>;
+		};
+
+		usb_clk:usb_clk@1F04D074 {
+			compatible = "be,pmu-device-clock";
+			#clock-cells = <1>;
+			clocks = <&div_125m 0>;
+			clock-names = "div125m";
+			reg = <0x1F04D074 0x0004>;
+			clock-output-names = "usbclk";
+			divider-width = <0>;
+		};
+
+
+		i2c0_clk:i2c0_clk {
+			compatible = "fixed-factor-clock";
+			clocks = <&div_125m 0>;
+			clock-names = "div125m";
+			#clock-cells = <0>;
+			clock-div = <1>;
+			clock-mult = <1>;
+			clock-output-names = "i2c0clk";
+		};
+
+		i2c1_clk:i2c1_clk {
+			compatible = "fixed-factor-clock";
+			clocks = <&div_125m 0>;
+			clock-names = "div125m";
+			#clock-cells = <0>;
+			clock-div = <1>;
+			clock-mult = <1>;
+			clock-output-names = "i2c1clk";
+		};
+
+        /** eth_pll -> div_156m domain **/
+		xgmac_dma:xgmac_dma@1F04D070 {
+			compatible = "be,pmu-device-clock";
+			#clock-cells = <1>;
+			clocks = <&div_156m 0>;
+			clock-names = "div156m";
+			reg = <0x1F04D070 0x0004>;
+			clock-output-names = "xgmac_dma";
+			clock-output = "dma_clk";
+			divider-width = <0>;
+		};
+
+		xgmac_ptp:xgmac_ptp {
+			compatible = "fixed-factor-clock";
+			clocks = <&div_156m 0>;
+			clock-names = "div156m";
+			#clock-cells = <0>;
+			clock-div = <4>;
+			clock-mult = <1>;
+			clock-output-names = "xgmacptp";
+			clock-output = "ptp_clk";
+		};
+
+        /** osc25 -> div_1m domain **/
+		wdt_clk:wdt_clk@1F04D080 {
+			compatible = "be,pmu-device-clock";
+			#clock-cells = <1>;
+			clocks = <&div_1m 0>;
+			clock-names = "div1m";
+			reg = <0x1F04D080 0x0004>;
+			clock-output-names = "wdtclk";
+			divider-width = <0>;
+		};
+	};
+};

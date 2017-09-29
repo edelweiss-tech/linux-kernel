@@ -1,3 +1,4 @@
+dts-dirs	+= baikal
 dts-dirs	+= brcm
 dts-dirs	+= cavium-octeon
 dts-dirs	+= ingenic
