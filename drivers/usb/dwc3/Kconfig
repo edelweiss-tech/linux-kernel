@@ -105,4 +105,33 @@ config USB_DWC3_ST
 	  inside (i.e. STiH407).
 	  Say 'Y' or 'M' if you have one such device.
 
+config USB_DWC3_BAIKAL
+	tristate "Baikal Electronics Platforms"
+	depends on MIPS_BAIKAL && OF
+	default USB_DWC3
+	help
+	  Baikal Electronics SoCs with one DesignWare Core USB3 IP
+	  inside.
+	  Say 'Y' or 'M' if you have one such device.
+
+comment "Debugging features"
+
+config USB_DWC3_DEBUG
+	bool "Enable Debugging Messages"
+	help
+	  Say Y here to enable debugging messages on DWC3 Driver.
+
+config USB_DWC3_VERBOSE
+	bool "Enable Verbose Debugging Messages"
+	depends on USB_DWC3_DEBUG
+	help
+	  Say Y here to enable verbose debugging messages on DWC3 Driver.
+
+config DWC3_HOST_USB3_LPM_ENABLE
+	bool "Enable USB3 LPM Capability"
+	depends on USB_DWC3_HOST=y || USB_DWC3_DUAL_ROLE=y
+	default n
+	help
+	  Select this when you want to enable USB3 LPM with dwc3 xhci host.
+
 endif
