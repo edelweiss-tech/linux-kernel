@@ -1,0 +1,12 @@
+* T-platforms mitx bmc driver
+
+Required properties:
+- compatible: Should be "tp,mitx2-bmc"
+- reg: i2c bus address of the device
+
+Example:
+
+	bmc@8 {
+		compatible = "tp,mitx2-bmc";
+		reg = <0x08>;
+	};
