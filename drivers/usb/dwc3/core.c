@@ -40,6 +40,7 @@
 #include <linux/usb/gadget.h>
 #include <linux/usb/of.h>
 #include <linux/usb/otg.h>
+#include <linux/usb/hcd.h>
 
 #include "core.h"
 #include "gadget.h"
@@ -1313,6 +1314,14 @@ static int dwc3_runtime_idle(struct device *dev)
 }
 #endif /* CONFIG_PM */
 
+static void dwc3_hcd_shutdown(struct platform_device *pdev)
+{
+	struct dwc3	*dwc = platform_get_drvdata(pdev);
+
+	if (dwc->xhci)
+		usb_hcd_platform_shutdown(dwc->xhci);
+}
+
 #ifdef CONFIG_PM_SLEEP
 static int dwc3_suspend(struct device *dev)
 {
@@ -1380,6 +1389,7 @@ MODULE_DEVICE_TABLE(acpi, dwc3_acpi_match);
 static struct platform_driver dwc3_driver = {
 	.probe		= dwc3_probe,
 	.remove		= dwc3_remove,
+	.shutdown	= dwc3_hcd_shutdown,
 	.driver		= {
 		.name	= "dwc3",
 		.of_match_table	= of_match_ptr(of_dwc3_match),
