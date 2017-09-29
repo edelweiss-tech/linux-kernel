@@ -28,6 +28,12 @@
  * #endif
  */
 
+#ifdef CONFIG_SM750_DMA
+ssize_t dw_fb_write(struct fb_info *info, const char __user *buf,
+			size_t count, loff_t *ppos);
+int dw_fb_ioctl(struct fb_info *info, u_int cmd, u_long arg);
+#endif
+
 /* common var for all device */
 static int g_hwcursor = 1;
 static int g_noaccel;
@@ -728,6 +734,10 @@ static struct fb_ops lynxfb_ops = {
 	.fb_fillrect = cfb_fillrect,
 	.fb_imageblit = cfb_imageblit,
 	.fb_copyarea = cfb_copyarea,
+#ifdef CONFIG_SM750_DMA
+	.fb_write = dw_fb_write,
+	.fb_ioctl = dw_fb_ioctl,
+#endif
 	/* cursor */
 	.fb_cursor = lynxfb_ops_cursor,
 };
@@ -1076,6 +1086,18 @@ static int lynxfb_pci_probe(struct pci_dev *pdev,
 	int max_fb;
 	int fbidx;
 	int err;
+#ifdef CONFIG_SM750_DMA
+	struct resource *r;
+
+	printk(KERN_INFO "%s: start\n", __FUNCTION__);
+	r = &pdev->resource[0];
+	if (!r->start && r->end) {
+		if (pci_assign_resource(pdev, 0)) {
+			pr_err("can't assign resource 0\n");
+			return -ENODEV;
+		}
+	}
+#endif/*CONFIG_SM750_DMA*/
 
 	err = lynxfb_kick_out_firmware_fb(pdev);
 	if (err)
