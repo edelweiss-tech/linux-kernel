@@ -198,6 +198,13 @@ config COMMON_CLK_OXNAS
 	---help---
 	  Support for the OXNAS SoC Family clocks.
 
+config COMMON_CLK_BAIKAL
+	bool "Clock driver for Baikal SoCs"
+	default y
+	depends on ARCH_BAIKAL && OF
+	---help---
+	  Support for the Baikal Electronicse SoC reference, PLL, and device clocks.
+
 source "drivers/clk/bcm/Kconfig"
 source "drivers/clk/hisilicon/Kconfig"
 source "drivers/clk/mediatek/Kconfig"
