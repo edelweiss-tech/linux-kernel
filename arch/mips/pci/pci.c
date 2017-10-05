@@ -72,10 +72,13 @@ int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
 		return -EINVAL;
 
 	/*
-	 * Ignore write-combine; for now only return uncached mappings.
+	 * Try to make use of write-combine.
 	 */
 	prot = pgprot_val(vma->vm_page_prot);
-	prot = (prot & ~_CACHE_MASK) | _CACHE_UNCACHED;
+	if (write_combine)
+		prot = (prot & ~_CACHE_MASK) | _CACHE_UNCACHED_ACCELERATED;
+	else
+		prot = (prot & ~_CACHE_MASK) | _CACHE_UNCACHED;
 	vma->vm_page_prot = __pgprot(prot);
 
 	return remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
