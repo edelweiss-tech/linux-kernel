@@ -306,14 +306,20 @@ int gic_get_c0_compare_int(void)
 
 int gic_get_c0_perfcount_int(void)
 {
+	struct irq_fwspec fwspec;
+
 	if (!gic_local_irq_is_routable(GIC_LOCAL_INT_PERFCTR)) {
 		/* Is the performance counter shared with the timer? */
 		if (cp0_perfcount_irq < 0)
 			return -1;
 		return MIPS_CPU_IRQ_BASE + cp0_perfcount_irq;
 	}
-	return irq_create_mapping(gic_irq_domain,
-				  GIC_LOCAL_TO_HWIRQ(GIC_LOCAL_INT_PERFCTR));
+
+	fwspec.fwnode = NULL;
+	fwspec.param_count = 2;
+	fwspec.param[0] = GIC_LOCAL;
+	fwspec.param[1] = GIC_LOCAL_INT_PERFCTR;
+	return irq_domain_alloc_irqs(gic_dev_domain, 1, NUMA_NO_NODE, &fwspec);
 }
 
 int gic_get_c0_fdc_int(void)
