@@ -711,6 +711,7 @@ err_dma_exit:
 	if (dws->dma_ops && dws->dma_ops->dma_exit)
 		dws->dma_ops->dma_exit(dws);
 	spi_enable_chip(dws, 0);
+	free_irq(dws->irq, dws);
 err_free_master:
 	spi_master_put(master);
 	return ret;
