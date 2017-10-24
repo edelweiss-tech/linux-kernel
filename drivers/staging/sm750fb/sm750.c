@@ -747,6 +747,8 @@ static int lynxfb_set_fbinfo(struct fb_info *info, int index)
 	struct lynxfb_output *output;
 	struct fb_var_screeninfo *var;
 	struct fb_fix_screeninfo *fix;
+	u8 *edid = NULL;
+	bool mode_found = false;
 
 	const struct fb_videomode *pdb[] = {
 		lynx750_ext, NULL, vesa_modes,
@@ -805,14 +807,42 @@ static int lynxfb_set_fbinfo(struct fb_info *info, int index)
 		lynxfb_ops.fb_imageblit = lynxfb_ops_imageblit;
 	}
 	info->fbops = &lynxfb_ops;
+	var->bits_per_pixel = 32; /* set as default */
 
-	if (!g_fbmode[index]) {
+	if (sm750_dev->ddc[index].ddc_registered)
+		edid = fb_ddc_read(&sm750_dev->ddc[index].ddc_adapter);
+	if (!edid && index == 0 && sm750_dev->ddc[1].ddc_registered)
+		edid = fb_ddc_read(&sm750_dev->ddc[1].ddc_adapter);
+	if (edid) {
+		fb_edid_to_monspecs(edid, &info->monspecs);
+		kfree(edid);
+pr_info("edid found, modedb_len %d\n", info->monspecs.modedb_len);
+		if (!info->monspecs.modedb)
+			dev_err(info->device, "error getting mode database\n");
+		else {
+			const struct fb_videomode *m;
+
+			fb_videomode_to_modelist(info->monspecs.modedb,
+					info->monspecs.modedb_len,
+					&info->modelist);
+			m = fb_find_best_display(&info->monspecs,
+						 &info->modelist);
+			if (m) {
+pr_info("best videomode: %s, %dx%d@%d\n", m->name, m->xres, m->yres, m->refresh);
+				fb_videomode_to_var(var, m);
+				if (lynxfb_ops_check_var(var, info) == 0)
+					mode_found = true;
+			}
+		}
+	}
+
+	if (!g_fbmode[index] && !mode_found) {
 		g_fbmode[index] = g_def_fbmode;
 		if (index)
 			g_fbmode[index] = g_fbmode[0];
 	}
 
-	for (i = 0; i < 3; i++) {
+	for (i = 0; i < 3 && g_fbmode[index]; i++) {
 
 		ret = fb_find_mode(var, info, g_fbmode[index],
 				   pdb[i], cdb[i], NULL, 8);
@@ -1091,6 +1121,8 @@ static int lynxfb_pci_probe(struct pci_dev *pdev,
 
 	pci_set_drvdata(pdev, sm750_dev);
 
+	sm750_setup_ddc(sm750_dev);
+
 	/* call chipInit routine */
 	hw_sm750_inithw(sm750_dev, pdev);
 
@@ -1154,6 +1186,7 @@ err_info0_set:
 	framebuffer_release(info[0]);
 err_info0_alloc:
 err_map:
+	sm750_remove_ddc(sm750_dev);
 	kfree(sm750_dev);
 err_share:
 err_enable:
@@ -1185,6 +1218,7 @@ static void lynxfb_pci_remove(struct pci_dev *pdev)
 	iounmap(sm750_dev->pvReg);
 	iounmap(sm750_dev->pvMem);
 	kfree(g_settings);
+	sm750_remove_ddc(sm750_dev);
 	kfree(sm750_dev);
 	pci_set_drvdata(pdev, NULL);
 }

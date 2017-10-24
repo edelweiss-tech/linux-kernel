@@ -1,6 +1,10 @@
 #ifndef LYNXDRV_H_
 #define LYNXDRV_H_
 
+#include <linux/i2c.h>
+#include <linux/i2c-algo-bit.h>
+#include <linux/pci.h>
+
 #define FB_ACCEL_SMI 0xab
 
 #define MHZ(x) ((x) * 1000000)
@@ -47,6 +51,15 @@ struct init_status {
 	ushort resetMemory;
 };
 
+struct sm750_ddc {
+	struct i2c_adapter ddc_adapter;
+	struct i2c_algo_bit_data ddc_algo;
+	void __iomem *regs;
+	unsigned char i2c_scl_pin;
+	unsigned char i2c_sda_pin;
+	bool ddc_registered;
+};
+
 struct lynx_accel {
 	/* base virtual address of DPR registers */
 	volatile unsigned char __iomem *dprBase;
@@ -78,6 +91,7 @@ struct sm750_dev {
 	struct pci_dev *pdev;
 	struct fb_info *fbinfo[2];
 	struct lynx_accel accel;
+	struct sm750_ddc ddc[2];	/* primary and secondary DDC */
 	int accel_off;
 	int dual;
 	int mtrr_off;
@@ -199,4 +213,6 @@ int hw_sm750_pan_display(struct lynxfb_crtc *crtc,
 			 const struct fb_var_screeninfo *var,
 			 const struct fb_info *info);
 
+int sm750_setup_ddc(struct sm750_dev *);
+void sm750_remove_ddc(struct sm750_dev *);
 #endif
