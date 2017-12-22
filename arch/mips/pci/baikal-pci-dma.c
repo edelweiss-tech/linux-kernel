@@ -139,11 +139,13 @@ HAL_DMA_RET DWDmaSingleBlockWrite(uint8_t chan, void *src, void *dst,
 	return SingleBlockRW(dma_rsc_val, DMA_WRITE, chan, src_dma,
 				dst_dma, size, wei, queue);
 }
+EXPORT_SYMBOL_GPL(DWDmaSingleBlockWrite);
 
 void DWGetChanWrStatus(uint8_t chan, DMA_CHAN_STATUS *status)
 {
 	return DmaGetChanStatus(dma_rsc_val->DmaRegs, DMA_WRITE, chan, status);
 }
+EXPORT_SYMBOL_GPL(DWGetChanWrStatus);
 
 static HAL_DMA_RET SingleBlockRW(PDMA_RSC pdrsc, DMA_DIRC dirc, uint8_t chan,
 				 PHYADDR src, PHYADDR dst, uint32_t size,
