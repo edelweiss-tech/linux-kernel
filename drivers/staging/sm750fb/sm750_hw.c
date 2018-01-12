@@ -234,6 +234,15 @@ int hw_sm750_crtc_checkMode(struct lynxfb_crtc *crtc,
 		return -EINVAL;
 	}
 
+	if (var->left_margin > 256 || var->upper_margin > 256) {
+		/* probably, overflow from unsigned subtraction */
+		return -EINVAL;
+	}
+	if (var->xres > 1920 || var->yres > 1444) {
+		/* Resolution is not supported by sm750 */
+		return -EINVAL;
+	}
+
 	return 0;
 }
 
