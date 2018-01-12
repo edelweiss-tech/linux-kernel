@@ -215,4 +215,5 @@ int hw_sm750_pan_display(struct lynxfb_crtc *crtc,
 
 int sm750_setup_ddc(struct sm750_dev *);
 void sm750_remove_ddc(struct sm750_dev *);
+char *sm750_ddc_read_edid(struct i2c_adapter *);
 #endif
