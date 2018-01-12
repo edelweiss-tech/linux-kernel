@@ -26,9 +26,6 @@ static void sm750_ddc_setscl(void *data, int val)
 	} else {
 		if (!(reg & mask))
 			writel(reg | mask, ddc->regs + GPIO_DATA_DIRECTION);
-		reg = readl(ddc->regs + GPIO_DATA);
-		if (reg & mask)
-			writel(reg & ~mask, ddc->regs + GPIO_DATA);
 	}
 }
  
@@ -38,16 +35,15 @@ static void sm750_ddc_setsda(void *data, int val)
 	u32 reg, mask;
 
 	mask = 1 << ddc->i2c_sda_pin;
-	reg = readl(ddc->regs + GPIO_DATA_DIRECTION);
-	if (!(reg & mask))
-		writel(reg | mask, ddc->regs + GPIO_DATA_DIRECTION);
 
-	reg = readl(ddc->regs + GPIO_DATA);
-	if (val)
-		reg |= mask;
-	else
-		reg &= ~mask;
-	writel(reg, ddc->regs + GPIO_DATA);
+	reg = readl(ddc->regs + GPIO_DATA_DIRECTION);
+	if (val) {
+		if (reg & mask)
+			writel(reg & ~mask, ddc->regs + GPIO_DATA_DIRECTION);
+	} else {
+		if (!(reg & mask))
+			writel(reg | mask, ddc->regs + GPIO_DATA_DIRECTION);
+	}
 }
  
 static int sm750_ddc_getscl(void *data)
@@ -71,8 +67,8 @@ static int sm750_ddc_getsda(void *data)
 
 	mask = 1 << ddc->i2c_sda_pin;
 	reg = readl(ddc->regs + GPIO_DATA_DIRECTION);
-	reg &= ~mask;
-	writel(reg, ddc->regs + GPIO_DATA_DIRECTION);
+	if (reg & mask)
+		writel(reg & ~mask, ddc->regs + GPIO_DATA_DIRECTION);
 
 	reg = readl(ddc->regs + GPIO_DATA);
 	return !!(reg & mask);
@@ -91,6 +87,20 @@ static int sm750_ddc_pre_xfer(struct i2c_adapter *adap)
 		reg &= ~mask;
 		writel(reg, ddc->regs + GPIO_MUX);
 	}
+
+	/* Set direction to IN. */
+	reg = readl(ddc->regs + GPIO_DATA);
+	reg &= ~mask;
+	writel(reg, ddc->regs + GPIO_DATA);
+
+	/*
+	 * Set data to 0, so we can operate with direction only - 
+	 * set IN for 1 or set OUT for 0.
+	 */
+	reg = readl(ddc->regs + GPIO_DATA_DIRECTION);
+	reg &= ~mask;
+	writel(reg, ddc->regs + GPIO_DATA_DIRECTION);
+
 	return 0;
 }
 
@@ -103,8 +113,8 @@ int sm750_ddc_init(struct sm750_ddc *ddc)
 	reg = readl(ddc->regs + GPIO_MUX);
 	reg &= ~mask;
 	writel(reg, ddc->regs + GPIO_MUX);
-	ddc->ddc_adapter.owner	= THIS_MODULE;
-	ddc->ddc_adapter.class	= I2C_CLASS_DDC;
+	ddc->ddc_adapter.owner = THIS_MODULE;
+	ddc->ddc_adapter.class = I2C_CLASS_DDC;
 	ddc->ddc_adapter.algo_data = &ddc->ddc_algo;
 	ddc->ddc_algo.setscl = sm750_ddc_setscl;
 	ddc->ddc_algo.setsda = sm750_ddc_setsda;
