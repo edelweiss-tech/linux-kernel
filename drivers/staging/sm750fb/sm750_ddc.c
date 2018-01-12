@@ -104,6 +104,36 @@ static int sm750_ddc_pre_xfer(struct i2c_adapter *adap)
 	return 0;
 }
 
+char *sm750_ddc_read_edid(struct i2c_adapter *adap)
+{
+	struct i2c_client *i2c_cl;
+	char *edid_buf;
+	int i, c;
+
+	i2c_cl = i2c_new_dummy(adap, 0x50);
+	if (IS_ERR_OR_NULL(i2c_cl))
+		return NULL;
+	edid_buf = kmalloc(256, GFP_KERNEL);
+	if (!edid_buf)
+		goto out_client;
+
+	for (i = 0; i < 256; i++) {
+		c = i2c_smbus_read_byte_data(i2c_cl, i);
+		if (c < 0)
+			goto out_free;
+		edid_buf[i] = c;
+	}
+
+	i2c_unregister_device(i2c_cl);
+	return edid_buf;
+
+out_free:
+	kfree(edid_buf);
+out_client:
+	i2c_unregister_device(i2c_cl);
+	return NULL;
+}
+
 int sm750_ddc_init(struct sm750_ddc *ddc)
 {
 	u32 reg, mask;
