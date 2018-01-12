@@ -1256,6 +1256,7 @@ EXPORT_SYMBOL(fb_videomode_to_var);
 EXPORT_SYMBOL(fb_var_to_videomode);
 EXPORT_SYMBOL(fb_mode_is_equal);
 EXPORT_SYMBOL(fb_add_videomode);
+EXPORT_SYMBOL(fb_delete_videomode);
 EXPORT_SYMBOL(fb_match_mode);
 EXPORT_SYMBOL(fb_find_best_mode);
 EXPORT_SYMBOL(fb_find_nearest_mode);
