@@ -201,7 +201,7 @@ static mode_parameter_t gDefaultModeParamTable[] =
    http://www.tek.com/Measurement/App_Notes/25_14700/eng/25W_14700_3.pdf
  */
 /* {2560,1920,2048,208, NEG,1125,1080,1081, 3, POS,172800000, 67500, 60, NEG}, */
- {2200,1920,2008, 44, NEG,1125,1080,1081, 3, POS,148500000, 67500, 60, NEG},
+ {2200,1920,2008, 44, POS,1125,1080,1084, 5, POS,148500000, 67500, 60, NEG},
 
 /* 1920 x 1200 [8:5]. -- Widescreen Ultra eXtended Graphics Array (WUXGA) */
  {2592,1920,2048,208, NEG,1242,1200,1201, 3, POS,193160000, 74522, 60, NEG},
