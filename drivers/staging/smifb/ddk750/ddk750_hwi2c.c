@@ -123,8 +123,8 @@ static unsigned long hwI2CWriteData(
     unsigned char *pBuffer
 )
 {
-    unsigned char value, count, i;
-    unsigned long timeout, totalBytes = 0;
+    unsigned char count, i;
+    unsigned long totalBytes = 0;
     
     /* Set the Device Address */
     pokeRegisterByte(I2C_SLAVE_ADDRESS, deviceAddress & ~0x01);
@@ -187,7 +187,7 @@ static unsigned long hwI2CReadData(
     unsigned char *pBuffer
 )
 {
-    unsigned char value, count, i;
+    unsigned char count, i;
     unsigned long totalBytes = 0; 
     
     /* Set the Device Address */

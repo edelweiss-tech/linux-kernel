@@ -799,9 +799,8 @@ long ddk768_setCustomMode(
     mode_parameter_t *pUserModeParam
 )
 {
-    mode_parameter_t pModeParam; /* physical parameters for the mode */
     pll_value_t pll;
-    unsigned long ulActualPixelClk, ulTemp;
+    unsigned long ulActualPixelClk;
 
     /*
      * Minimum check on mode base address.

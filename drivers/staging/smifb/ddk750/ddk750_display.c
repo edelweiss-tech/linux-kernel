@@ -374,7 +374,6 @@ void setDAC(disp_state_t state)
 void setDisplayControl(disp_control_t dispControl, disp_state_t dispState)
 {
     unsigned long ulDisplayCtrlReg, ulReservedBits;
-    unsigned long ulCount = 0;
 
     /* Set the primary display control */
     if (dispControl == PRIMARY_CTRL)
@@ -727,8 +726,6 @@ long setLogicalDispOutput(
     unsigned char dispCtrlUsage
 )
 {
-    unsigned long ulReg;
-
     //DDKDEBUGPRINT((DISPLAY_LEVEL, "setLogicalDispOutput\n"));
 
     switch (output)
@@ -1214,8 +1211,6 @@ long setLogicalDispOutputExt(
     unsigned char dispCtrlUsage
 )
 {
-    unsigned long ulReg;
-
     //DDKDEBUGPRINT((DISPLAY_LEVEL, "setLogicalDispOutputExt\n"));
 
     switch (output)

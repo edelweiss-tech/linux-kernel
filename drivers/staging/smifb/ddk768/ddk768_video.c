@@ -129,7 +129,7 @@ unsigned long videoGetBufferSize(
     unsigned long bufferIndex
 )
 {
-    unsigned long value;
+    unsigned long value = 0;
     
     if (bufferIndex == 0)
     {
@@ -283,7 +283,6 @@ void videoSetUVBuffer(
     unsigned long bufferStartVAddress    /* Video buffer with 128-bit alignment */
 )
 {
-    unsigned long bufferSize;
 	unsigned long regU, regV;
 
 	regU = (dispCtrl == CHANNEL0_CTRL)? VIDEO_FB_ADDRESS_U : (VIDEO_FB_ADDRESS_U+CHANNEL_OFFSET);

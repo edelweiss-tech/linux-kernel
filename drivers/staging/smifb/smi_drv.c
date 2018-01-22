@@ -199,7 +199,6 @@ static int smi_drm_resume(struct drm_device *dev)
 {	
 	ENTER();
 	
-	struct smi_device *sdev = dev->dev_private;
 	int ret;
 
 	if (pci_enable_device(dev->pdev))

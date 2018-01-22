@@ -14,9 +14,6 @@
 #define DEFAULT_INPUT_CLOCK 12000000 /* Default reference clock */
 #define MHz(x) (x*1000000) /* Don't use this macro if x is fraction number */
 
-#define DEFAULT_INPUT_CLOCK MHz(12) /* Default reference clock */
-
-#define GHz(x) (x*1000000000)   //1000000000HZ  = 1(Ghz)
 #define FRAC_MAX    32768
 
 typedef struct pll_value_t
