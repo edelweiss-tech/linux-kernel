@@ -633,9 +633,15 @@ static struct drm_encoder *smi_encoder_init(struct drm_device *dev, int index)
  	return encoder;
 }
 
-struct edid edid0;
-struct edid edid1;
-struct edid hdmi_edid;
+union {
+	struct edid e;
+	char _b[256];
+} edid_buf[3];
+
+#define edid0		edid_buf[0].e
+#define edid1		edid_buf[1].e
+#define hdmi_edid	edid_buf[2].e
+
 int smi_connector_get_modes(struct drm_connector *connector)
 {
 	int count = 0, ret;
