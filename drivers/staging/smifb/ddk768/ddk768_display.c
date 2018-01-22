@@ -456,7 +456,7 @@ long ddk768_detectCRTMonitor(
     value = FIELD_VALUE(0, CRT_DETECT, DATA_RED, red) |
             FIELD_VALUE(0, CRT_DETECT, DATA_GREEN, green) |
             FIELD_VALUE(0, CRT_DETECT, DATA_BLUE, blue) |
-            FIELD_SET(value, CRT_DETECT, ENABLE, ENABLE);
+            FIELD_SET(0, CRT_DETECT, ENABLE, ENABLE);
     pokeRegisterDWord(ulMonitorDetectAddr, value);
     
     /* Add some delay here. Otherwise, the detection is not stable.

@@ -30,19 +30,6 @@ struct drm_encoder * smi_enc_tab[MAX_ENCODER];
 int g_m_connector = 0;//bit 0: DVI, bit 1: VGA, bit 2: HDMI.
 
 
-inline int smi_calc_hdmi_ctrl(int m_connector)
-{
-		int smi_ctrl = 0;
-
-		if(m_connector==USE_DVI_HDMI) // //vga is empty, dvi is occupied , HDMI use ctrl 1;
-			smi_ctrl = 1;
-		else
-			smi_ctrl = 0;
-			
-		return smi_ctrl;
-
-}
-
 /*
  * This file contains setup code for the CRTC.
  */
@@ -84,7 +71,6 @@ static int smi_crtc_do_set_base(struct drm_crtc *crtc,
 				int x, int y, int atomic, int dst_ctrl)
 {
 	ENTER();
-	struct smi_device *cdev = crtc->dev->dev_private;
 	struct smi_crtc *smi_crtc = to_smi_crtc(crtc);
 	struct smi_framebuffer *smi_fb;
 	struct smi_bo *bo;
@@ -520,7 +506,7 @@ static void smi_encoder_dpms(struct drm_encoder *encoder, int mode)
 			if(g_m_connector == USE_VGA_HDMI||g_m_connector==USE_HDMI)
 			{
 				dbg_msg("DVI connector off\n");
-				LEAVE(0);
+				LEAVE();
 			}
 			dbg_msg("DVI connector: index=%d\n",index);
 	
@@ -530,14 +516,14 @@ static void smi_encoder_dpms(struct drm_encoder *encoder, int mode)
 			if(g_m_connector == USE_DVI_HDMI)
 			{
 				dbg_msg("VGA connector off\n");
-				LEAVE(0);
+				LEAVE();
 			}
 			dbg_msg("VGA connector: index=%d\n",index);
 		}
 		else if(encoder->encoder_type  == DRM_MODE_ENCODER_TMDS)
 		{	
 			if(force_connect)
-				LEAVE(0);
+				LEAVE();
 			if (mode == DRM_MODE_DPMS_OFF)	
 				hw768_HDMI_Disable_Output();
 			else
@@ -551,7 +537,7 @@ static void smi_encoder_dpms(struct drm_encoder *encoder, int mode)
 			 	dbg_msg("HDMI connector: index=%d\n",index);
 			}else{
 				dbg_msg("HDMI connector not set dpms\n");
-				LEAVE(0);
+				LEAVE();
 			}
 		}
 		
@@ -652,7 +638,7 @@ struct edid edid1;
 struct edid hdmi_edid;
 int smi_connector_get_modes(struct drm_connector *connector)
 {
-	int count,ret ;
+	int count = 0, ret;
 	ENTER();
 	dbg_msg("print connector type :[%d], DVI=%d, VGA=%d, HDMI=%d\n",connector->connector_type, DRM_MODE_CONNECTOR_DVII,DRM_MODE_CONNECTOR_VGA,DRM_MODE_CONNECTOR_HDMIA );
 	void* tmpedid;
@@ -915,6 +901,7 @@ static enum drm_connector_status smi_connector_detect(struct drm_connector
 		
 		}
 	}
+	return connector_status_disconnected;
 }
 
 static void smi_connector_destroy(struct drm_connector *connector)

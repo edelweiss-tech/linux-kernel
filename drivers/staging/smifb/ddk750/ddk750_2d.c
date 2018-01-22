@@ -514,7 +514,6 @@ long deStartTrapezoidFill(
     unsigned long rop2    /* ROP value */
 )
 {
-    unsigned long dx, dy;
     unsigned long de_ctrl =
         FIELD_SET  (0, DE_CONTROL, STATUS,      START)           |
         FIELD_SET  (0, DE_CONTROL, QUICK_START, ENABLE)          |
@@ -588,8 +587,6 @@ long deNextTrapezoidFill(
     unsigned long length        /* Line length */
 )
 {
-    unsigned long de_ctrl;
-    
     if (deWaitForNotBusy() != 0)
     {
         /* The 2D engine is always busy for some unknown reason.
@@ -895,7 +892,6 @@ long deSystemMem2VideoMemBusMasterBlt(
 {
     unsigned long de_ctrl, bytePerPixel;
     unsigned long value, pciMasterBaseAddress;
-    long opSign;
 
     if (deWaitForNotBusy() != 0)
     {
@@ -1750,7 +1746,6 @@ long deVideoMem2VideoMemRotateBlt(
 )
 {
     unsigned long de_ctrl = 0; 
-    unsigned long tempWidth, dxTemp, dyTemp;
     unsigned long maxRotationWidth;
     
     /* Maximum rotation width BLT */
@@ -2657,7 +2652,10 @@ long deVideoMem2VideoMemAlphaBlendBlt(
     unsigned long rop2              /* ROP control */
 )
 {
-    unsigned long de_ctrl = 0, transparency, bytePerPixel;
+    unsigned long de_ctrl = 0, bytePerPixel;
+#ifdef ALPHA_BLEND_BLOCK_TRANSPARENCY
+    unsigned long transparency;
+#endif
     
     bytePerPixel = bpp/8; 
     

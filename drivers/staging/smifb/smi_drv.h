@@ -169,8 +169,8 @@ struct smi_mc {
 	resource_size_t			vram_base;
 };
 
-extern struct smi_750_register;
-extern struct smi_768_register;
+struct smi_750_register;
+struct smi_768_register;
 
 struct smi_device {
 	struct drm_device		*dev;
@@ -237,8 +237,17 @@ void smi_crtc_fb_gamma_set(struct drm_crtc *crtc, u16 red, u16 green,
 void smi_crtc_fb_gamma_get(struct drm_crtc *crtc, u16 *red, u16 *green,
 			     u16 *blue, int regno);
 
-inline int smi_calc_hdmi_ctrl(int m_connector);
+static inline int smi_calc_hdmi_ctrl(int m_connector)
+{
+	int smi_ctrl = 0;
 
+	if(m_connector==USE_DVI_HDMI) // //vga is empty, dvi is occupied , HDMI use ctrl 1;
+		smi_ctrl = 1;
+	else
+		smi_ctrl = 0;
+
+	return smi_ctrl;
+}
 
 				/* smi_main.c */
 int smi_device_init(struct smi_device *cdev,
