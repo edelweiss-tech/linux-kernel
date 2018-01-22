@@ -94,7 +94,7 @@ unsigned long getPowerMode()
  */
 void setPowerMode(unsigned long powerMode)
 {
-    unsigned long control_value = 0, previousPowerState, timeout, value;
+    unsigned long control_value = 0, previousPowerState;
 
     /* Get the current power mode ctrl register value and save it 
        before switching the power mode. */

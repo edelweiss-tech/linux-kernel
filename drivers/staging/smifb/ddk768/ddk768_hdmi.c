@@ -1028,7 +1028,7 @@ long HDMI_Read_Edid(BYTE *pEDIDBuffer, unsigned long bufferSize)
     #define EDID_EXT    (gEdidBuffer[126])
     
     BYTE byChecksum = 0, regValue;
-    unsigned long i = 0, j = 0;
+    unsigned long i = 0;
     unsigned long retry = 10000;
             
     if (pEDIDBuffer == (unsigned char *)0)

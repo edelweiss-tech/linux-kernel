@@ -124,8 +124,8 @@ unsigned long hwI2CWriteData(
     unsigned char *pBuffer
 )
 {
-    unsigned char value, count, i;
-    unsigned long offset, timeout, totalBytes = 0;
+    unsigned char count, i;
+    unsigned long offset, totalBytes = 0;
     
     offset = (i2cNumber == 0)? 0 : I2C_OFFSET;
 
@@ -191,7 +191,7 @@ unsigned long hwI2CReadData(
     unsigned char *pBuffer
 )
 {
-    unsigned char value, count, i;
+    unsigned char count, i;
     unsigned long offset, totalBytes = 0; 
     
     offset = (i2cNumber == 0)? 0 : I2C_OFFSET;

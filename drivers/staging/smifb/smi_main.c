@@ -330,7 +330,7 @@ void drm_kms_helper_poll_init(struct drm_device *dev);
 int smi_driver_load(struct drm_device *dev, unsigned long flags)
 {
 	struct smi_device *cdev;
-	int r;
+	int r, ret;
 
 	cdev = kzalloc(sizeof(struct smi_device), GFP_KERNEL);
 	if (cdev == NULL)
@@ -376,8 +376,6 @@ int smi_driver_load(struct drm_device *dev, unsigned long flags)
 	}
 
 	drm_vblank_init(dev, dev->mode_config.num_crtc);
-
-	int ret;
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,16,0)	
 		ret = drm_irq_install(dev, dev->pdev->irq);

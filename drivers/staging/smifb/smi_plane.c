@@ -25,7 +25,7 @@ void colorcur2monocur(void * data)
 {
 	unsigned int * col = (unsigned int *)data;
 	unsigned char * mono = (unsigned char *)data;
-	unsigned char pixel;
+	unsigned char pixel = 0;
 	char bit_values;
 
 	int i;
@@ -165,14 +165,6 @@ static void smi_cursor_atomic_update(struct drm_plane *plane,struct drm_plane_st
 void smi_cursor_atomic_disable(struct drm_plane *plane,
 			       struct drm_plane_state *old_state)
 {
-
-	struct drm_crtc *crtc = plane->state->crtc;
-	
-	disp_control_t disp_crtc;
-	int i, ctrl_index, max_enc;
-	ctrl_index = 0;
-
-	
 	if (!old_state || !old_state->crtc)
 		return;
 
@@ -264,7 +256,6 @@ static void smi_plane_cleanup_fb(struct drm_plane *plane, struct drm_plane_state
 	ENTER();
 	struct drm_gem_object *obj;
 	struct smi_bo *user_bo;
-	struct drm_crtc *crtc = plane->state->crtc;
 	
 	if(g_specId == SPC_SM750)
 	{

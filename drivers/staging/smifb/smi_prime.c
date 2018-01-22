@@ -49,7 +49,6 @@ struct drm_gem_object *smi_gem_prime_import_sg_table(struct drm_device *dev,
 							struct sg_table *sg)
 {
 	struct reservation_object *resv = attach->dmabuf->resv;
-	struct smi_device *sdev = dev->dev_private;
 	struct smi_bo *bo;
 	int ret;
 

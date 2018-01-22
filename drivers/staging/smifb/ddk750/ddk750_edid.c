@@ -315,7 +315,6 @@ unsigned char edidCheckMonitorInputSignal(
 )
 {
     unsigned char version;
-    unsigned short index;
     
     /* Get EDID Version and revision */
     version = edidGetVersion(pEDIDBuffer, (unsigned char *)0);
@@ -712,7 +711,7 @@ unsigned char edidIsDefaultGTFSupported(
     unsigned char *pEDIDBuffer
 )
 {
-    unsigned char version, revision;
+    unsigned char version;
     
     /* Get EDID Version and revision */
     version = edidGetVersion(pEDIDBuffer, (unsigned char *)0);
@@ -780,7 +779,7 @@ void edidGetColorCharacteristic(
     unsigned short *pBlueY
 )
 {
-    unsigned char version, revision;
+    unsigned char version;
     
     /* Get EDID Version and revision */
     version = edidGetVersion(pEDIDBuffer, (unsigned char *)0);
@@ -856,7 +855,7 @@ long edidGetWhitePoint(
     unsigned short *pWhiteGamma
 )
 {
-    unsigned char version, revision, index, tableIndex;
+    unsigned char version, index, tableIndex;
     
     if (pWhitePointIndex == (unsigned char *)0)
         return (-1);
@@ -929,6 +928,7 @@ long edidGetWhitePoint(
     return (-1);
 }
 
+#if 0 /* not used */
 /*
  *  edidCalculateChecksum
  *      This function adds all one-byte value of the EDID buffer. 
@@ -960,6 +960,7 @@ static unsigned char edidCalculateChecksum(
     
     return checksum;
 }
+#endif
 
 /*
  *  edidGetExtension
@@ -1013,7 +1014,7 @@ long ddk750_edidReadMonitorEx(
     unsigned char sdaGpio
 )
 {
-    unsigned char value, retry, edidVersion, edidRevision;
+    unsigned char retry, edidVersion, edidRevision;
     unsigned char edidBuffer[256];
     unsigned long offset;
     
@@ -1538,7 +1539,6 @@ long edidGetStandardTiming(
 )
 {
     unsigned char version, revision, timingIndex, tableIndex;
-    unsigned long x, y, aspectRatio;
     
     /* Get EDID Version and revision */
     version = edidGetVersion(pEDIDBuffer, &revision);
@@ -1642,7 +1642,6 @@ long edidGetDetailedTiming(
 )
 {
     unsigned char version, revision, tableIndex;
-    unsigned long x, y, aspectRatio;
     
     /* Get EDID Version and revision */
     version = edidGetVersion(pEDIDBuffer, &revision);
@@ -1899,7 +1898,7 @@ long edidGetMonitorRangeLimit(
     unsigned long *pMaxPixelClock
 )
 {
-    unsigned char version, revision, tableIndex, charIndex;
+    unsigned char version, revision, tableIndex;
     
     if (pEDIDBuffer == (unsigned char *)0)
         return (-1);
@@ -1976,7 +1975,7 @@ long edidGetSecondaryTimingSupport(
     unsigned char *pScalingFactorWeight
 )
 {
-    unsigned char version, revision, tableIndex, charIndex;
+    unsigned char version, revision, tableIndex;
             
     /* Get EDID Version and revision */
     version = edidGetVersion(pEDIDBuffer, &revision);
