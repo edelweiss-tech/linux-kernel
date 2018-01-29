@@ -119,8 +119,14 @@ char *sm750_ddc_read_edid(struct i2c_adapter *adap)
 
 	for (i = 0; i < 256; i++) {
 		c = i2c_smbus_read_byte_data(i2c_cl, i);
-		if (c < 0)
-			goto out_free;
+		if (c < 0) {
+			if (i < 128) {
+				goto out_free;
+			} else {
+				memset(edid_buf + 128, 128, 0);
+				break;
+			}
+		}
 		edid_buf[i] = c;
 	}
 
