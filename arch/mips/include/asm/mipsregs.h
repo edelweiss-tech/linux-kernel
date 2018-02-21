@@ -652,6 +652,8 @@
 #define MIPS_CONF5_CV		(_ULCAST_(1) << 29)
 #define MIPS_CONF5_K		(_ULCAST_(1) << 30)
 
+/* Jump register cache prediction disable */
+#define MIPS_CONF6_JRCD		(_ULCAST_(1) << 0)
 #define MIPS_CONF6_SYND		(_ULCAST_(1) << 13)
 /* proAptiv FTLB on/off bit */
 #define MIPS_CONF6_FTLBEN	(_ULCAST_(1) << 15)
@@ -659,6 +661,8 @@
 #define MIPS_CONF6_FTLBDIS	(_ULCAST_(1) << 22)
 /* FTLB probability bits */
 #define MIPS_CONF6_FTLBP_SHIFT	(16)
+/* Disable load/store bonding */
+#define MIPS_CONF6_DLSB		(_ULCAST_(1) << 21)
 
 #define MIPS_CONF7_WII		(_ULCAST_(1) << 31)
 
