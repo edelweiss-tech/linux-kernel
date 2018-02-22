@@ -39,7 +39,7 @@ config DWMAC_GENERIC
 
 config DWMAC_BAIKAL
 	tristate "Baikal Electronics DWMAC support"
-	default ARCH_BAIKAL
+	default MIPS_BAIKAL
 	depends on OF
 	help
 	  Support for Baikal Electronics DWMAC Ethernet.

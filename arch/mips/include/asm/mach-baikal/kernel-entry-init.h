@@ -193,7 +193,7 @@
 	.set	pop
 	.endm
 
-#ifndef CONFIG_MACH_BAIKAL_BFK2
+#ifndef CONFIG_MIPS_BAIKAL_T1
 	.macro	platform_errata_fix
 
 	.set	push
@@ -285,7 +285,7 @@
 	platform_legacy_init
 #endif /* CONFIG_EVA */
 0:
-#ifndef CONFIG_MACH_BAIKAL_BFK2
+#ifndef CONFIG_MIPS_BAIKAL_T1
 	platform_errata_fix
 #endif
 	platform_enable_msa
@@ -305,7 +305,7 @@
 	platform_legacy_init
 #endif  /* CONFIG_EVA */
 
-#ifndef CONFIG_MACH_BAIKAL_BFK2
+#ifndef CONFIG_MIPS_BAIKAL_T1
 	platform_errata_fix
 #endif
 	platform_enable_msa
