@@ -24,7 +24,6 @@
 #define GMAC_GPIO	0x000000e0	/* GPIO register */
 #define GMAC_GPIO_GPO0	(1 << 8)	/* 0-output port */
 
-#ifdef CONFIG_MACH_BAIKAL_BFK2
 static struct stmmac_dma_ops baikal_dma_ops;
 
 static int baikal_dwmac_dma_reset(void __iomem *ioaddr)
@@ -52,7 +51,6 @@ static int baikal_dwmac_dma_reset(void __iomem *ioaddr)
 
 	return 0;
 }
-#endif
 
 static int dwmac_baikal_probe(struct platform_device *pdev)
 {
@@ -93,7 +91,6 @@ static int dwmac_baikal_probe(struct platform_device *pdev)
 
 	ret = stmmac_dvr_probe(&pdev->dev, plat_dat, &stmmac_res);
 
-#ifdef CONFIG_MACH_BAIKAL_BFK2
 	if (!ret) {
 		/* change dma_reset method to baikal specific */
 		struct net_device *ndev = dev_get_drvdata(&pdev->dev);
@@ -105,7 +102,6 @@ static int dwmac_baikal_probe(struct platform_device *pdev)
 			priv->hw->dma = &baikal_dma_ops;
 		}
 	}
-#endif
 
 	return ret;
 }
