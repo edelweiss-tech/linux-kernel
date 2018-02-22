@@ -247,7 +247,14 @@ static int dw_pcie_init(void)
 	reg &= ~pmu_pcie_rstc_mask;
 	WRITE_PMU_REG(BK_PMU_PCIE_RSTC, reg);
 	reg = READ_PMU_REG(BK_PMU_PCIE_RSTC);
-	pr_debug("%s: PCIE_RSTC after reset: %08x\n", __func__, reg);
+	pr_info("%s: PCIE_RSTC after reset: %08x (mask was %x)\n", __func__, reg, pmu_pcie_rstc_mask);
+	if (reg & 0x3f11) {
+		reg &= ~0x3f11;
+		WRITE_PMU_REG(BK_PMU_PCIE_RSTC, reg);
+		usleep_range(10, 20);
+		reg = READ_PMU_REG(BK_PMU_PCIE_RSTC);
+		pr_info("%s: new PCIE_RSTC: %08x\n", __func__, reg);
+	}
 
 	/* 3.1 Set DBI2 mode, dbi2_cs = 0x1 */
 	reg = READ_PMU_REG(BK_PMU_PCIE_GENC);
