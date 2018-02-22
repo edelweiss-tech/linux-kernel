@@ -161,6 +161,18 @@ config MACH_BAIKAL_MODULE
 	# DTB select
 	select DTB_BAIKAL_MODULE
 
+config MACH_BAIKAL_MSBT2
+	bool "Baikal-T MSBT2 board"
+
+	select MIPS_BAIKAL_T1
+	select BAIKAL_T_COMMON
+
+	# Errata set
+	select PAGE_SIZE_16KB
+
+	# DTB select
+	select DTB_BAIKAL_MSBT2
+
 config MACH_BAIKAL_QEMU
 	bool "Baikal-T QEMU simulator"
 
@@ -251,6 +263,12 @@ config DTB_BAIKAL_MITX
 	  Device tree for T-Platforms mITX boards
 	  based on Baikal-T SOC.
 
+config DTB_BAIKAL_MSBT2
+	bool "Baikal-T MSBT2 board"
+	help
+	  Device tree for T-Platforms MSBT2 boards
+	  based on Baikal-T SOC.
+
 endchoice
 
 config ARCH_NR_GPIO
@@ -260,6 +278,7 @@ config ARCH_NR_GPIO
 	default 40 if MACH_BAIKAL_BFK2
 	default 40 if MACH_BAIKAL_MITX
 	default 48 if MACH_BAIKAL_MODULE
+	default 48 if MACH_BAIKAL_MSBT2
 	default 32
 	help
 	  Maximum number of GPIOs in the system.
