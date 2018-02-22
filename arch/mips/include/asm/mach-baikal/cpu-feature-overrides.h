@@ -81,4 +81,8 @@
 #endif
 #define cpu_has_htw		0
 
+#ifdef CONFIG_MIPS_BAIKAL_T
+#define cpu_has_nan_legacy	1
+#endif
+
 #endif /* _BAIKAL_CPU_FEATURE_OVERRIDES_H */
