@@ -100,6 +100,19 @@ pgprot_t phys_mem_access_prot(struct file *file, unsigned long pfn,
 	return vma_prot;
 }
 
+#ifdef CONFIG_PCIE_DW_PLAT
+static void pci_fixup_video(struct pci_dev *pdev)
+{
+	if (pdev->resource[0].flags & IORESOURCE_PREFETCH) {
+		uca_start = pdev->resource[0].start;
+		uca_end = pdev->resource[0].end;
+		dev_info(&pdev->dev, "Video buffer at %lx-%lx\n",
+			 uca_start, uca_end);
+	}		
+}
+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID, PCI_CLASS_DISPLAY_VGA,
+				8, pci_fixup_video);
+#else
 int /* __init*/ baikal_find_vga_mem_init(void)
 {
 	struct pci_dev *dev = 0;
@@ -129,6 +142,7 @@ int /* __init*/ baikal_find_vga_mem_init(void)
 	return 0;
 }
 late_initcall(baikal_find_vga_mem_init);
+#endif
 #endif /* !CONFIG_CPU_SUPPORTS_UNCACHED_ACCELERATED */
 
 /*
