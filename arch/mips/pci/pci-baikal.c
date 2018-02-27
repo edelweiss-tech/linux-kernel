@@ -263,11 +263,11 @@ static int dw_pcie_init(void)
 	/* 3.2 Set writing to RO Registers Using DBI */
 	WRITE_PCIE_REG(PCIE_MISC_CONTROL_1_OFF, DBI_RO_WR_EN);
 
-	/* set PCI bridge class */
+	/* set PCI bridge class (subtractive decode) */
 	reg = READ_PMU_REG(BK_PMU_PCIE_GENC);
 	reg &= ~PMU_PCIE_GENC_DBI2_MODE;
 	WRITE_PMU_REG(BK_PMU_PCIE_GENC, reg);
-	WRITE_PCIE_REG(PCIE_TYPE1_CLASS_CODE_REV_ID_REG, 0x06040001);
+	WRITE_PCIE_REG(PCIE_TYPE1_CLASS_CODE_REV_ID_REG, 0x06040101);
 
 	/* 3.1 Set DBI2 mode, dbi2_cs = 0x1 */
 	reg = READ_PMU_REG(BK_PMU_PCIE_GENC);
@@ -661,4 +661,17 @@ MODULE_DESCRIPTION("Baikal Electronics PCIe Driver.");
 MODULE_LICENSE("Proprietary");
 MODULE_AUTHOR("Alexey Malakhov");
 MODULE_ALIAS("platform:dw_pci");
+#else
+static void vga_norom(struct pci_dev *dev)
+{
+	struct resource *r = &dev->resource[PCI_ROM_RESOURCE];
+
+	r->flags = 0;
+	r->start = 0;
+	r->end = 0;
+	pci_disable_rom(dev);
+	dev_info(&dev->dev, "ROM disabled.\n");
+}
+DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_ANY_ID, PCI_ANY_ID, PCI_CLASS_DISPLAY_VGA,
+				8, vga_norom);
 #endif /* CONFIG_PCIE_DW_PLAT */

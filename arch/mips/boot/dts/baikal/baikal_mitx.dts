@@ -195,14 +195,14 @@
 			interrupts = <GIC_SHARED 88 IRQ_TYPE_LEVEL_HIGH>,
 				<GIC_SHARED 89 IRQ_TYPE_LEVEL_HIGH>;
 			reg = <0x1F052000 0x1000>,	/* Controller regs */
-			      <0x18000000 0x20000>;	/* PCI config space */
+			      <0x1bb00000 0x20000>;	/* PCI config space */
 			reg-names = "PCIe ctrlreg", "config";
 			bus-range = <0x0 0xff>;
 			#address-cells = <3>;
 			#size-cells = <2>;
 			device_type = "pci";
-			ranges = <0x81000000 0 0x00000000 0x18020000 0 0x00010000
-				  0x82000000 0 0x08000000 0x08000000 0 0x10000000>;
+			ranges = <0x81000000 0 0x00000000 0x1bd00000 0 0x00010000
+				  0x82000000 0 0x20000000 0x08000000 0 0x13b00000>;
 			num-lanes = <4>;
 			num-vieports = <4>;
 		};
