@@ -149,6 +149,9 @@ config MACH_BAIKAL_MITX
 	# DTB select
 	select DTB_BAIKAL_MITX
 
+	# PCIe
+	select PCI_DRIVERS_GENERIC
+
 config MACH_BAIKAL_MODULE
 	bool "Baikal-T Module board"
 
@@ -161,6 +164,9 @@ config MACH_BAIKAL_MODULE
 	# DTB select
 	select DTB_BAIKAL_MODULE
 
+	# PCIe
+	select PCI_DRIVERS_GENERIC
+
 config MACH_BAIKAL_MSBT2
 	bool "Baikal-T MSBT2 board"
 
@@ -172,6 +178,9 @@ config MACH_BAIKAL_MSBT2
 
 	# DTB select
 	select DTB_BAIKAL_MSBT2
+
+	# PCIe
+	select PCI_DRIVERS_GENERIC
 
 config MACH_BAIKAL_QEMU
 	bool "Baikal-T QEMU simulator"
