@@ -192,7 +192,7 @@ config MACH_BAIKAL_RT1MB
 	select PAGE_SIZE_16KB
 
 	# DTB select
-	select DTB_BAIKAL_RT1MB
+	select DTB_TP_RT1MB
 
 	# PCIe
 	select PCI_DRIVERS_GENERIC
