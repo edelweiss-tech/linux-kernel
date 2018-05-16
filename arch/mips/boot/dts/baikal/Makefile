@@ -6,7 +6,7 @@ dtb-$(CONFIG_DTB_BAIKAL_QEMU)	+= baikal_qemu.dtb
 dtb-$(CONFIG_DTB_BAIKAL_MODULE)	+= baikal_module.dtb
 dtb-$(CONFIG_DTB_BAIKAL_MITX)	+= baikal_mitx.dtb
 dtb-$(CONFIG_DTB_BAIKAL_MSBT2)	+= baikal_msbt2.dtb
-
+dtb-$(CONFIG_DTB_BAIKAL_RT1MB)	+= tplatforms_rt1mb.dtb
 
 dtb-$(CONFIG_DT_NONE)		+= \
 					baikal.dtb	\
