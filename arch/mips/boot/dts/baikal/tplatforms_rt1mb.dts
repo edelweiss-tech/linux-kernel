@@ -138,50 +138,6 @@
 			clock-names = "sataclk";
 		};
 
-               mdio0: be-mdio {
-                       compatible = "be,mdio-gpio";
-                       #address-cells = <1>;
-                       #size-cells = <0>;
-                       mdc-pin = <&porta 9 GPIO_ACTIVE_HIGH>;
-                       mdo-pin = <&porta 10 GPIO_ACTIVE_HIGH>;
-                       mdio-pin = <&porta 11 GPIO_ACTIVE_HIGH>;
-                       rst-pin = <&porta 27 GPIO_ACTIVE_HIGH>;
-                       clocks = <&gpio_clk 0>;
-                       clock-names = "gpioclk";
-
-                       mv_ch0:88X2222@0C {
-                               compatible = "marvell,88x2222", "ethernet-phy-ieee802.3-c45";
-                               reg = <0x0C>;
-                               phy-mode = "xgmii";
-                               mv,line-mode = <0>; /* 10GBASE-R (0x71) */
-                               mv,host-mode = <0>; /* 10GBASE-R (0x71) */
-                       };
-
-                       mv_ch1:88X2222@0D {
-                               compatible = "marvell,88x2222", "ethernet-phy-ieee802.3-c45";
-                               reg = <0x0D>;
-                               phy-mode = "xgmii";
-                               mv,line-mode = <0>; /* 10GBASE-R (0x71) */
-                               mv,host-mode = <0>; /* 10GBASE-R (0x71) */
-                       };
-
-                       mv_ch2:88X2222@0E {
-                               compatible = "marvell,88x2222", "ethernet-phy-ieee802.3-c45";
-                               reg = <0x0E>;
-                               phy-mode = "xgmii";
-                               mv,line-mode = <0>; /* 10GBASE-R (0x71) */
-                               mv,host-mode = <0>; /* 10GBASE-R (0x71) */
-                       };
-
-                       mv_ch3:88X2222@0F {
-                               compatible = "marvell,88x2222", "ethernet-phy-ieee802.3-c45";
-                               reg = <0x0F>;
-                               phy-mode = "xgmii";
-                               mv,line-mode = <0>; /* 10GBASE-R (0x71) */
-                               mv,host-mode = <0>; /* 10GBASE-R (0x71) */
-                       };
-               };
-
 		xgmac: eth0@1F054000 {
 			compatible = "be,baikal-xgbe";
 			reg = <0x1F054000 0x4000>,
@@ -242,6 +198,17 @@
 			txd2-skew-ps = <0>;
 			txd3-skew-ps = <0>;
 			txc-skew-ps  = <0xff>;
+
+      mdio0 {
+        #address-cells = <1>;
+        #size-cells = <0>;
+        compatible = "snps,dwmac-mdio";
+        switch0: switch@0 {
+            compatible = "marvell,mv88e6190";
+            reg = <0>;
+            //reset-gpios = <&gpio5 1 GPIO_ACTIVE_LOW>;
+        };
+		  };
 		};
 
 		usb3: usb@1F04D050 {
