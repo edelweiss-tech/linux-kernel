@@ -398,6 +398,12 @@
           reg = <0x70>;
           i2c-mux-idle-disconnect;
 
+          i2c@1 {
+            #address-cells = <1>;
+            #size-cells = <0>;
+            reg = <1>;
+          };
+
           i2c@2 {
             #address-cells = <1>;
             #size-cells = <0>;
@@ -408,18 +414,6 @@
             #address-cells = <1>;
             #size-cells = <0>;
             reg = <4>;
-          };
-
-          i2c@5 {
-            #address-cells = <1>;
-            #size-cells = <0>;
-            reg = <5>;
-
-            eeprom@53 {
-              compatible = "atmel,24c512";
-              reg = <0x53>;
-              pagesize = <32>;
-            };
           };
 
           i2c@5 {
