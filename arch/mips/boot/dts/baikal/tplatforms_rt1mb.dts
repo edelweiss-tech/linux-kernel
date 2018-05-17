@@ -138,6 +138,8 @@
 			clock-names = "sataclk";
 		};
 
+
+
     /*            mdio0: be-mdio { */
     /*                    compatible = "be,mdio-gpio"; */
     /*                    #address-cells = <1>; */
@@ -198,7 +200,7 @@
 		/* 	clocks = <&xgmac_dma 0>, <&xgmac_ptp 0>, <&div_156m 0>; */
 		/* 	clock-names = "dma_clk", "ptp_clk", "xgbe_clk"; */
     /*                    be,external-clock; */
-		/* 	phy-handle = <&mv_ch0>; */
+		/* 	phy-handle = <&cpu_port>; */
 		/* 	phy-mode = "xgmii"; */
 		/* 	be,speed-set = <1>; */
 		/* 	be,mode-set = <0>; */
@@ -212,7 +214,7 @@
 			interrupt-parent = <&gic>;
 			interrupts = <GIC_SHARED 72 IRQ_TYPE_LEVEL_HIGH>;
 			interrupt-names = "macirq";
-			phy-mode = "rgmii-rxid";
+			phy-mode = "rgmii_rxid";
 			clocks = <&gmac0_clk 0>;
 			clock-names = "stmmaceth";
 			mac-address = [ 7a 72 6c 4a 7a 07 ];
@@ -224,14 +226,13 @@
 			txc-skew-ps  = <0xff>;
 		};
 
-
 		gmac1: eth2@1F060000 {
 			compatible = "be,dwmac", "snps,dwmac-3.710", "snps,dwmac";
 			reg = <0x1F060000 0x2000>;
 			interrupt-parent = <&gic>;
 			interrupts = <GIC_SHARED 73 IRQ_TYPE_LEVEL_HIGH>;
 			interrupt-names = "macirq";
-			phy-mode = "rgmii-rxid";
+			phy-mode = "rgmii_rxid";
 			clocks = <&gmac1_clk 0>;
 			clock-names = "stmmaceth";
 			mac-address = [ 7a 72 6c 4a 7b 07 ];
@@ -241,17 +242,6 @@
 			txd2-skew-ps = <0>;
 			txd3-skew-ps = <0>;
 			txc-skew-ps  = <0xff>;
-
-      mdio0 {
-        #address-cells = <1>;
-        #size-cells = <0>;
-        compatible = "snps,dwmac-mdio";
-        switch0: switch@0 {
-            compatible = "marvell,mv88e6190";
-            reg = <0>;
-            //reset-gpios = <&gpio5 1 GPIO_ACTIVE_LOW>;
-        };
-		  };
 		};
 
 		usb3: usb@1F04D050 {
