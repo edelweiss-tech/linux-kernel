@@ -213,7 +213,7 @@
 			interrupt-parent = <&gic>;
 			interrupts = <GIC_SHARED 72 IRQ_TYPE_LEVEL_HIGH>;
 			interrupt-names = "macirq";
-			phy-mode = "rgmii";
+			phy-mode = "rgmii-rxid";
 			clocks = <&gmac0_clk 0>;
 			clock-names = "stmmaceth";
 			mac-address = [ 7a 72 6c 4a 7a 07 ];
@@ -232,7 +232,7 @@
 			interrupt-parent = <&gic>;
 			interrupts = <GIC_SHARED 73 IRQ_TYPE_LEVEL_HIGH>;
 			interrupt-names = "macirq";
-			phy-mode = "rgmii";
+			phy-mode = "rgmii-rxid";
 			clocks = <&gmac1_clk 0>;
 			clock-names = "stmmaceth";
 			mac-address = [ 7a 72 6c 4a 7b 07 ];
