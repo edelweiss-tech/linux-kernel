@@ -42,8 +42,8 @@
 		ssi1 = &spi1;
 		ethernet0 = &gmac0;
 		ethernet1 = &gmac1;
-		ethernet2 = &xgmac;
-		mdio-gpio0 = &mdio0;
+		//ethernet2 = &xgmac;
+		//mdio-gpio0 = &mdio0;
 	};
 
 	chosen {
@@ -138,30 +138,73 @@
 			clock-names = "sataclk";
 		};
 
-		xgmac: eth0@1F054000 {
-			compatible = "be,baikal-xgbe";
-			reg = <0x1F054000 0x4000>,
-			      <0x1F05D000 0x1000>;
-			interrupt-parent = <&gic>;
-			interrupts = <GIC_SHARED 74 IRQ_TYPE_LEVEL_HIGH>,
-                                     <GIC_SHARED 75 IRQ_TYPE_LEVEL_HIGH>,
-                                     <GIC_SHARED 76 IRQ_TYPE_LEVEL_HIGH>,
-                                     <GIC_SHARED 77 IRQ_TYPE_LEVEL_HIGH>,
-                                     <GIC_SHARED 78 IRQ_TYPE_LEVEL_HIGH>,
-                                     <GIC_SHARED 79 IRQ_TYPE_LEVEL_HIGH>;
-                        be,per-channel-interrupt;
-                        fsl,num-rx-queues=<3>;
-			clocks = <&xgmac_dma 0>, <&xgmac_ptp 0>, <&div_156m 0>;
-			clock-names = "dma_clk", "ptp_clk", "xgbe_clk";
-                       be,external-clock;
-			phy-handle = <&mv_ch0>;
-			phy-mode = "xgmii";
-			be,speed-set = <1>;
-			be,mode-set = <0>;
-			mac-address = [ 00 20 13 ba 1c a1 ];
-			local-mac-address = [ 00 20 13 ba 1c a1 ];
-		};
+    /*            mdio0: be-mdio { */
+    /*                    compatible = "be,mdio-gpio"; */
+    /*                    #address-cells = <1>; */
+    /*                    #size-cells = <0>; */
+    /*                    mdc-pin = <&porta 9 GPIO_ACTIVE_HIGH>; */
+    /*                    mdo-pin = <&porta 10 GPIO_ACTIVE_HIGH>; */
+    /*                    mdio-pin = <&porta 11 GPIO_ACTIVE_HIGH>; */
+    /*                    rst-pin = <&porta 27 GPIO_ACTIVE_HIGH>; */
+    /*                    clocks = <&gpio_clk 0>; */
+    /*                    clock-names = "gpioclk"; */
 
+    /*                    mv_ch0:88X2222@0C { */
+    /*                            compatible = "marvell,88x2222", "ethernet-phy-ieee802.3-c45"; */
+    /*                            reg = <0x0C>; */
+    /*                            phy-mode = "xgmii"; */
+    /*                            mv,line-mode = <0>; /\* 10GBASE-R (0x71) *\/ */
+    /*                            mv,host-mode = <0>; /\* 10GBASE-R (0x71) *\/ */
+    /*                    }; */
+
+    /*                    mv_ch1:88X2222@0D { */
+    /*                            compatible = "marvell,88x2222", "ethernet-phy-ieee802.3-c45"; */
+    /*                            reg = <0x0D>; */
+    /*                            phy-mode = "xgmii"; */
+    /*                            mv,line-mode = <0>; /\* 10GBASE-R (0x71) *\/ */
+    /*                            mv,host-mode = <0>; /\* 10GBASE-R (0x71) *\/ */
+    /*                    }; */
+
+    /*                    mv_ch2:88X2222@0E { */
+    /*                            compatible = "marvell,88x2222", "ethernet-phy-ieee802.3-c45"; */
+    /*                            reg = <0x0E>; */
+    /*                            phy-mode = "xgmii"; */
+    /*                            mv,line-mode = <0>; /\* 10GBASE-R (0x71) *\/ */
+    /*                            mv,host-mode = <0>; /\* 10GBASE-R (0x71) *\/ */
+    /*                    }; */
+
+    /*                    mv_ch3:88X2222@0F { */
+    /*                            compatible = "marvell,88x2222", "ethernet-phy-ieee802.3-c45"; */
+    /*                            reg = <0x0F>; */
+    /*                            phy-mode = "xgmii"; */
+    /*                            mv,line-mode = <0>; /\* 10GBASE-R (0x71) *\/ */
+    /*                            mv,host-mode = <0>; /\* 10GBASE-R (0x71) *\/ */
+    /*                    }; */
+    /*            }; */
+
+		/* xgmac: eth0@1F054000 { */
+		/* 	compatible = "be,baikal-xgbe"; */
+		/* 	reg = <0x1F054000 0x4000>, */
+		/* 	      <0x1F05D000 0x1000>; */
+		/* 	interrupt-parent = <&gic>; */
+		/* 	interrupts = <GIC_SHARED 74 IRQ_TYPE_LEVEL_HIGH>, */
+    /*                                  <GIC_SHARED 75 IRQ_TYPE_LEVEL_HIGH>, */
+    /*                                  <GIC_SHARED 76 IRQ_TYPE_LEVEL_HIGH>, */
+    /*                                  <GIC_SHARED 77 IRQ_TYPE_LEVEL_HIGH>, */
+    /*                                  <GIC_SHARED 78 IRQ_TYPE_LEVEL_HIGH>, */
+    /*                                  <GIC_SHARED 79 IRQ_TYPE_LEVEL_HIGH>; */
+    /*                     be,per-channel-interrupt; */
+    /*                     fsl,num-rx-queues=<3>; */
+		/* 	clocks = <&xgmac_dma 0>, <&xgmac_ptp 0>, <&div_156m 0>; */
+		/* 	clock-names = "dma_clk", "ptp_clk", "xgbe_clk"; */
+    /*                    be,external-clock; */
+		/* 	phy-handle = <&mv_ch0>; */
+		/* 	phy-mode = "xgmii"; */
+		/* 	be,speed-set = <1>; */
+		/* 	be,mode-set = <0>; */
+		/* 	mac-address = [ 00 20 13 ba 1c a1 ]; */
+		/* 	local-mac-address = [ 00 20 13 ba 1c a1 ]; */
+		/* }; */
 
 		gmac0: eth1@1F05E000 {
 			compatible = "be,dwmac", "snps,dwmac-3.710", "snps,dwmac";
