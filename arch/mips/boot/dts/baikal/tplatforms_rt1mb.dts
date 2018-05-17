@@ -376,7 +376,7 @@
 			compatible = "snps,designware-i2c";
 			reg = <0x1F046000 0x1000>;
 			interrupts = <GIC_SHARED 33 IRQ_TYPE_LEVEL_HIGH>;
-			clock-frequency = <400000>;
+			clock-frequency = <100000>;
 			clocks = <&i2c0_clk 0>;
 			clock-names = "i2c0clk";
 		};
@@ -387,14 +387,76 @@
 			compatible = "snps,designware-i2c";
 			reg = <0x1F047000 0x1000>;
 			interrupts = <GIC_SHARED 34 IRQ_TYPE_LEVEL_HIGH>;
-			clock-frequency = <400000>;
+			clock-frequency = <100000>;
 			clocks = <&i2c1_clk 0>;
 			clock-names = "i2c1clk";
 
-			rtc@51 {
-				compatible = "nxp,pcf2129";
-				reg = <0x51>;
-			};
+      i2c-switch@70 {
+          compatible = "nxp,pca9548";
+          #address-cells = <1>;
+          #size-cells = <0>;
+          reg = <0x70>;
+          i2c-mux-idle-disconnect;
+
+          i2c@2 {
+            #address-cells = <1>;
+            #size-cells = <0>;
+            reg = <2>;
+          };
+
+          i2c@4 {
+            #address-cells = <1>;
+            #size-cells = <0>;
+            reg = <4>;
+          };
+
+          i2c@5 {
+            #address-cells = <1>;
+            #size-cells = <0>;
+            reg = <5>;
+
+            eeprom@53 {
+              compatible = "atmel,24c512";
+              reg = <0x53>;
+              pagesize = <32>;
+            };
+          };
+
+          i2c@5 {
+            #address-cells = <1>;
+            #size-cells = <0>;
+            reg = <5>;
+
+            eeprom@53 {
+              compatible = "atmel,24c512";
+              reg = <0x53>;
+              pagesize = <128>;
+            };
+          };
+
+          i2c@6 {
+            #address-cells = <1>;
+            #size-cells = <0>;
+            reg = <6>;
+
+            eeprom@50 {
+              compatible = "atmel,24c512";
+              reg = <0x50>;
+              pagesize = <128>;
+            };
+          };
+
+          i2c@7 {
+            #address-cells = <1>;
+            #size-cells = <0>;
+            reg = <7>;
+
+            rtc@51 {
+              compatible = "nxp,pcf2129";
+              reg = <0x51>;
+            };
+          };
+        };
 		};
 
 		spi0: spi0@1F04E000 {
