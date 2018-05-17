@@ -396,7 +396,6 @@
           #address-cells = <1>;
           #size-cells = <0>;
           reg = <0x70>;
-          i2c-mux-idle-disconnect;
 
           i2c@1 {
             #address-cells = <1>;
