@@ -157,7 +157,9 @@ static const unsigned short full_speed_maxpacket_maxes[4] = {
 static const unsigned short high_speed_maxpacket_maxes[4] = {
 	[USB_ENDPOINT_XFER_CONTROL] = 64,
 	[USB_ENDPOINT_XFER_ISOC] = 1024,
-	[USB_ENDPOINT_XFER_BULK] = 512,
+
+	/* Bulk should be 512, but some devices use 1024: we will warn below */
+	[USB_ENDPOINT_XFER_BULK] = 1024,
 	[USB_ENDPOINT_XFER_INT] = 1024,
 };
 static const unsigned short super_speed_maxpacket_maxes[4] = {
@@ -973,7 +975,7 @@ int usb_get_bos_descriptor(struct usb_device *dev)
 		case USB_SSP_CAP_TYPE:
 			ssp_cap = (struct usb_ssp_cap_descriptor *)buffer;
 			ssac = (le32_to_cpu(ssp_cap->bmAttributes) &
-				USB_SSP_SUBLINK_SPEED_ATTRIBS) + 1;
+				USB_SSP_SUBLINK_SPEED_ATTRIBS);
 			if (length >= USB_DT_USB_SSP_CAP_SIZE(ssac))
 				dev->bos->ssp_cap = ssp_cap;
 			break;
