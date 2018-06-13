@@ -151,16 +151,12 @@ unsigned platform_maar_init(unsigned num_pairs)
 			continue;
 		}
 
-		/* Avoid of low memory mapping */
-		if (boot_mem_map.map[i].addr < (BAIKAL_DRAM_START + BAIKAL_DRAM_SIZE)) {
-			cfg[num_cfg].upper = ((ulong)virt_to_phys(_end) & ~0xffff) - 1;
-			cfg[num_cfg].lower = ((ulong)virt_to_phys(_text) + 0xffff) & ~0xffff;
-		} else {
-			cfg[num_cfg].upper = boot_mem_map.map[i].addr +
-						boot_mem_map.map[i].size;
-			cfg[num_cfg].upper = (cfg[num_cfg].upper & ~0xffff) - 1;
-			cfg[num_cfg].lower = (boot_mem_map.map[i].addr + 0xffff) & ~0xffff;
-		}
+		cfg[num_cfg].upper = boot_mem_map.map[i].addr +
+					boot_mem_map.map[i].size;
+		cfg[num_cfg].upper = (cfg[num_cfg].upper & ~0xffff) - 1;
+		cfg[num_cfg].lower = (boot_mem_map.map[i].addr + 0xffff) & ~0xffff;
+		if (cfg[num_cfg].lower > cfg[num_cfg].upper)
+			continue;
 		cfg[num_cfg].attrs = MIPS_MAAR_S;
 		num_cfg++;
 	}
