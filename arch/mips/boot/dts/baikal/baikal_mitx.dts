@@ -359,6 +359,7 @@
 			interrupts = <GIC_SHARED 40 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&spi0_clk 0>;
 			clock-names = "spi0clk";
+			reg-io-width = <4>;
 			num-cs = <2>;
 			cs-gpios = <&porta 14 GPIO_ACTIVE_LOW>;
       
@@ -384,6 +385,7 @@
 			interrupts = <GIC_SHARED 41 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&spi1_clk 0>;
 			clock-names = "spi1clk";
+			reg-io-width = <4>;
 			num-cs = <0>;
 		};
     
