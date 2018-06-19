@@ -238,7 +238,14 @@ static int dw_pcie_init(void)
 	reg &= ~pmu_pcie_rstc_mask;
 	WRITE_PMU_REG(BK_PMU_PCIE_RSTC, reg);
 	reg = READ_PMU_REG(BK_PMU_PCIE_RSTC);
-	pr_debug("%s: PCIE_RSTC after reset: %08x\n", __func__, reg);
+	pr_info("%s: PCIE_RSTC after reset: %08x (mask was %x)\n", __func__, reg, pmu_pcie_rstc_mask);
+	if (reg & 0x3f11) {
+		reg &= ~0x3f11;
+		WRITE_PMU_REG(BK_PMU_PCIE_RSTC, reg);
+		usleep_range(10, 20);
+		reg = READ_PMU_REG(BK_PMU_PCIE_RSTC);
+		pr_info("%s: new PCIE_RSTC: %08x\n", __func__, reg);
+	}
 
 	/* 3.1 Set DBI2 mode, dbi2_cs = 0x1 */
 	reg = READ_PMU_REG(BK_PMU_PCIE_GENC);
@@ -469,71 +476,6 @@ static int dw_pcie_init(void)
 
 	return st;
 }
-
-#ifdef CONFIG_KEXEC
-#if 0
-void dw_pcie_kexec_prepare(void)
-{
-	volatile uint32_t reg;
-
-	pr_info("pci-baikal - dw_pcie_reset_kexec\n");
-
-	/* Clear LTSSM enable (delay link init) */
-	pr_info("pci-baikal - dw_pcie_reset_kexec: delay link init\n");
-	reg = READ_PMU_REG(BK_PMU_PCIE_GENC);
-	reg &= ~PMU_PCIE_GENC_LTSSM_ENABLE;
-	WRITE_PMU_REG(BK_PMU_PCIE_GENC, reg);
-	usleep_range(10, 20);
-
-	/* PMU_PCIE_RSTC_HOT_RESET */
-	reg = READ_PMU_REG(BK_PMU_PCIE_RSTC);
-	pr_info("pci-baikal - dw_pcie_reset_kexec: [1] BK_PMU_PCIE_RSTC=0x%08x\n", reg);
-
-	/* Clear HOT_RESET bit */
-	reg &= ~PMU_PCIE_RSTC_HOT_RESET;
-	WRITE_PMU_REG(BK_PMU_PCIE_RSTC, reg);
-	usleep_range(10, 20);
-
-	/* Start hot reset */
-	reg = READ_PMU_REG(BK_PMU_PCIE_RSTC);
-	reg |= PMU_PCIE_RSTC_HOT_RESET;
-	WRITE_PMU_REG(BK_PMU_PCIE_RSTC, reg);
-	usleep_range(10, 20);
-	reg = READ_PMU_REG(BK_PMU_PCIE_RSTC);
-	pr_info("pci-baikal - dw_pcie_reset_kexec: [2] BK_PMU_PCIE_RSTC=0x%08x\n", reg);
-
-	if ( reg & PMU_PCIE_RSTC_REQ_RESET ) {
-		pr_info("pci-baikal - dw_pcie_reset_kexec: PMU_PCIE_RSTC_REQ_RESET\n");
-		/* PIPE_RESET */
-		reg = READ_PMU_REG(BK_PMU_PCIE_RSTC);
-		reg |= PMU_PCIE_RSTC_PIPE_RESET;
-		WRITE_PMU_REG(BK_PMU_PCIE_RSTC, reg);
-		usleep_range(1, 10);
-		reg = READ_PMU_REG(BK_PMU_PCIE_RSTC);
-		reg &= ~PMU_PCIE_RSTC_PIPE_RESET;
-		WRITE_PMU_REG(BK_PMU_PCIE_RSTC, reg);
-
-		/* CORE_RST */
-		reg = READ_PMU_REG(BK_PMU_PCIE_RSTC);
-		reg |= PMU_PCIE_RSTC_CORE_RST;
-		WRITE_PMU_REG(BK_PMU_PCIE_RSTC, reg);
-		usleep_range(1, 10);
-		reg = READ_PMU_REG(BK_PMU_PCIE_RSTC);
-		reg &= ~PMU_PCIE_RSTC_CORE_RST;
-		WRITE_PMU_REG(BK_PMU_PCIE_RSTC, reg);
-
-		/* NONSTICKY_RST */
-		reg = READ_PMU_REG(BK_PMU_PCIE_RSTC);
-		reg |= PMU_PCIE_RSTC_NONSTICKY_RST;
-		WRITE_PMU_REG(BK_PMU_PCIE_RSTC, reg);
-		usleep_range(1, 10);
-		reg = READ_PMU_REG(BK_PMU_PCIE_RSTC);
-		reg &= ~PMU_PCIE_RSTC_NONSTICKY_RST;
-		WRITE_PMU_REG(BK_PMU_PCIE_RSTC, reg);
-	}
-}
-#endif
-#endif /* CONFIG_KEXEC */
 
 void __init mips_pcibios_init(void)
 {
