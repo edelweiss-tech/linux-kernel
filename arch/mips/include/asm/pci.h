@@ -19,6 +19,7 @@
 #include <linux/ioport.h>
 #include <linux/of.h>
 
+#ifdef CONFIG_PCI_DRIVERS_LEGACY
 /*
  * Each pci channel is a top-level PCI bus seem by CPU.	 A machine  with
  * multiple PCI channels may have multiple PCI host controllers or a
@@ -55,6 +56,7 @@ struct pci_controller {
  * Used by boards to register their PCI busses before the actual scanning.
  */
 extern void register_pci_controller(struct pci_controller *hose);
+#endif
 
 /*
  * board supplied pci irq fixup routine
@@ -113,7 +115,12 @@ struct pci_dev;
  */
 extern unsigned int PCI_DMA_BUS_IS_PHYS;
 
-#ifdef CONFIG_PCI_DOMAINS
+#ifdef CONFIG_PCI_DOMAINS_GENERIC
+static inline int pci_proc_domain(struct pci_bus *bus)
+{
+	return pci_domain_nr(bus);
+}
+#elif defined(CONFIG_PCI_DOMAINS)
 #define pci_domain_nr(bus) ((struct pci_controller *)(bus)->sysdata)->index
 
 static inline int pci_proc_domain(struct pci_bus *bus)
@@ -139,6 +146,7 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
 
 extern char * (*pcibios_plat_setup)(char *str);
 
+#ifdef CONFIG_PCI_DRIVERS_LEGACY
 #ifdef CONFIG_OF
 /* this function parses memory ranges from a device node */
 extern void pci_load_of_ranges(struct pci_controller *hose,
@@ -146,6 +154,7 @@ extern void pci_load_of_ranges(struct pci_controller *hose,
 #else
 static inline void pci_load_of_ranges(struct pci_controller *hose,
 				      struct device_node *node) {}
+#endif
 #endif
 
 #endif /* _ASM_PCI_H */

@@ -2887,7 +2887,6 @@ config PCI
 	bool "Support for PCI controller"
 	depends on HW_HAS_PCI
 	select PCI_DOMAINS
-	select NO_GENERIC_PCI_IOPORT_MAP
 	help
 	  Find out whether you have a PCI motherboard. PCI is the name of a
 	  bus system, i.e. the way the CPU talks to the other stuff inside
@@ -2907,6 +2906,17 @@ config HT_PCI
 
 config PCI_DOMAINS
 	bool
+
+config PCI_DOMAINS_GENERIC
+	bool
+
+config PCI_DRIVERS_GENERIC
+	select PCI_DOMAINS_GENERIC if PCI_DOMAINS
+	bool
+
+config PCI_DRIVERS_LEGACY
+	def_bool !PCI_DRIVERS_GENERIC
+	select NO_GENERIC_PCI_IOPORT_MAP
 
 source "drivers/pci/Kconfig"
 
