@@ -25,20 +25,94 @@ if MIPS_BAIKAL
 
 choice
 	prompt "Baikal CPU Support"
-	default ARCH_BAIKAL
+	default MIPS_BAIKAL_T
 
-config ARCH_BAIKAL
+config MIPS_BAIKAL_T
 	bool "BAIKAL-T MIPS CPU"
 	select OF_EARLY_FLATTREE
 	select GENERIC_SCHED_CLOCK
 	select NO_IOPORT
 	select SOC_BUS
 	help
-	  Baikal-T (MIPS32 P5600) SoC based systems
+	  Early version of Baikal-T (MIPS32 P5600) SoC based systems
+
+config MIPS_BAIKAL_T1
+	bool "BAIKAL-T1 MIPS CPU"
+	select OF_EARLY_FLATTREE
+	select GENERIC_SCHED_CLOCK
+	select NO_IOPORT
+	select SOC_BUS
+	help
+	  Baikal-T1 (MIPS32 P5600) SoC based systems (newer version)
 
 endchoice
 
-if ARCH_BAIKAL
+
+config BAIKAL_T_COMMON
+	bool "Baikal-T common features"
+
+	# Hardware features
+	select HW_HAS_PCI
+	select HW_PERF_EVENTS
+
+	# Common
+	select PHYLIB
+	select DEBUG_LL
+	select TIMER_GENERIC
+	select ARCH_WANT_OPTIONAL_GPIOLIB
+	select SYS_HAS_CPU_MIPS32_R5
+
+	# HW perfomance counters
+	select HAVE_PERF_EVENTS
+	select PERF_EVENTS
+	select HW_PERF_EVENTS
+
+	# Clock source
+	select COMMON_CLK_BAIKAL
+	select WDT_MIPS_GIC
+
+	# Serial UART
+	select SERIAL_8250
+	select SERIAL_8250_CONSOLE
+	select SERIAL_8250_EXTENDED
+	select SERIAL_8250_DW
+
+	# WatchDog
+	select DW_WATCHDOG
+
+	# Timers
+	select CLKSRC_OF
+	select DW_APB_TIMER
+	select DW_APB_TIMER_OF
+
+	# I2C Bus support
+	select I2C_DESIGNWARE_CORE
+	select I2C_DESIGNWARE_PLATFORM
+
+	# GPIO support
+	select GPIOLIB
+	select OF_GPIO
+	select GPIO_SYSFS
+	select GPIO_DWAPB
+	select GPIO_GENERIC
+
+	# Gigabit Ethernet support
+	select STMMAC_ETH
+	select STMMAC_PLATFORM
+	select STMMAC_DEBUG_FS
+
+	# SPI bus support
+	select SPI_DESIGNWARE
+	select SPI_DW_MMIO
+
+	# USB Support
+	select USB_DWC3
+	select USB_DWC3_HOST
+	select USB_DWC3_BAIKAL
+	select USB_PHY
+
+	help
+	  Common features of Baikal-T based boards
 
 choice
 	prompt "Baikal-T Support Boards"
@@ -47,68 +121,13 @@ choice
 config MACH_BAIKAL_BFK
 	bool "Baikal-T BFK board"
 
-	# Hardware features
-	select HW_HAS_PCI
-	select HW_PERF_EVENTS
+	select MIPS_BAIKAL_T
+	select BAIKAL_T_COMMON
 
 	# Errata set
 	select PAGE_SIZE_16KB
 
-	# Common
-	select PHYLIB
-	select DEBUG_LL
-	select TIMER_GENERIC
-	select ARCH_WANT_OPTIONAL_GPIOLIB
-	select SYS_HAS_CPU_MIPS32_R5
-
-	# HW perfomance counters
-	select HAVE_PERF_EVENTS
-	select PERF_EVENTS
-	select HW_PERF_EVENTS
-
-	# Clock source
-	select COMMON_CLK_BAIKAL
 	select WDT_MIPS_GIC
-
-	# Serial UART
-	select SERIAL_8250
-	select SERIAL_8250_CONSOLE
-	select SERIAL_8250_EXTENDED
-	select SERIAL_8250_DW
-
-	# WatchDog
-	select DW_WATCHDOG
-
-	# Timers
-	select CLKSRC_OF
-	select DW_APB_TIMER
-	select DW_APB_TIMER_OF
-
-	# I2C Bus support
-	select I2C_DESIGNWARE_CORE
-	select I2C_DESIGNWARE_PLATFORM
-
-	# GPIO support
-	select GPIOLIB
-	select OF_GPIO
-	select GPIO_SYSFS
-	select GPIO_DWAPB
-	select GPIO_GENERIC
-
-	# Gigabit Ethernet support
-	select STMMAC_ETH
-	select STMMAC_PLATFORM
-	select STMMAC_DEBUG_FS
-
-	# SPI bus support
-	select SPI_DESIGNWARE
-	select SPI_DW_MMIO
-
-	# USB Support
-	select USB_DWC3
-	select USB_DWC3_HOST
-	select USB_DWC3_BAIKAL
-	select USB_PHY
 
 	# DTB select
 	select DTB_BAIKAL_BFK
@@ -116,191 +135,46 @@ config MACH_BAIKAL_BFK
 config MACH_BAIKAL_BFK2
 	bool "Baikal-T BFK2 board"
 
-	# Hardware features
-	select HW_HAS_PCI
-	select HW_PERF_EVENTS
+	select MIPS_BAIKAL_T1
+	select BAIKAL_T_COMMON
 
 	# Errata set
 	select PAGE_SIZE_16KB
-
-	# Common
-	select PHYLIB
-	select DEBUG_LL
-	select TIMER_GENERIC
-	select ARCH_WANT_OPTIONAL_GPIOLIB
-	select SYS_HAS_CPU_MIPS32_R5
-
-	# HW perfomance counters
-	select HAVE_PERF_EVENTS
-	select PERF_EVENTS
-	select HW_PERF_EVENTS
-
-	# Clock source
-	select COMMON_CLK_BAIKAL
-	select WDT_MIPS_GIC
-
-	# Serial UART
-	select SERIAL_8250
-	select SERIAL_8250_CONSOLE
-	select SERIAL_8250_EXTENDED
-	select SERIAL_8250_DW
-
-	# WatchDog
-	select DW_WATCHDOG
-
-	# Timers
-	select CLKSRC_OF
-	select DW_APB_TIMER
-	select DW_APB_TIMER_OF
-
-	# I2C Bus support
-	select I2C_DESIGNWARE_CORE
-	select I2C_DESIGNWARE_PLATFORM
-
-	# GPIO support
-	select GPIOLIB
-	select OF_GPIO
-	select GPIO_SYSFS
-	select GPIO_DWAPB
-	select GPIO_GENERIC
-
-	# Gigabit Ethernet support
-	select STMMAC_ETH
-	select STMMAC_PLATFORM
-	select STMMAC_DEBUG_FS
-
-	# SPI bus support
-	select SPI_DESIGNWARE
-	select SPI_DW_MMIO
-
-	# USB Support
-	select USB_DWC3
-	select USB_DWC3_HOST
-	select USB_DWC3_BAIKAL
-	select USB_PHY
 
 	# DTB select
 	select DTB_BAIKAL_BFK2
 
-config MACH_BAIKAL_MODULE
-	bool "Baikal-T Module board"
+config MACH_BAIKAL_MITX
+	bool "Baikal-T mITX board"
 
-	# Hardware features
-	select HW_HAS_PCI
-	select HW_PERF_EVENTS
+	select MIPS_BAIKAL_T1
+	select BAIKAL_T_COMMON
 
 	# Errata set
 	select PAGE_SIZE_16KB
 
-	# Common
-	select PHYLIB
-	select DEBUG_LL
-	select TIMER_GENERIC
-	select ARCH_WANT_OPTIONAL_GPIOLIB
-	select SYS_HAS_CPU_MIPS32_R5
+	# DTB select
+	select DTB_BAIKAL_MITX
 
-	# HW perfomance counters
-	select HAVE_PERF_EVENTS
-	select PERF_EVENTS
-	select HW_PERF_EVENTS
+config MACH_BAIKAL_MODULE
+	bool "Baikal-T Module board"
 
-	# Clock source
-	select COMMON_CLK_BAIKAL
+	select MIPS_BAIKAL_T
+	select BAIKAL_T_COMMON
 
-	# Serial UART
-	select SERIAL_8250
-	select SERIAL_8250_CONSOLE
-	select SERIAL_8250_EXTENDED
-	select SERIAL_8250_DW
-
-	# WatchDog
-	select DW_WATCHDOG
-
-	# Timers
-	select CLKSRC_OF
-	select DW_APB_TIMER
-	select DW_APB_TIMER_OF
-
-	# I2C Bus support
-	select I2C_DESIGNWARE_CORE
-	select I2C_DESIGNWARE_PLATFORM
-
-	# GPIO support
-	select GPIOLIB
-	select OF_GPIO
-	select GPIO_SYSFS
-	select GPIO_DWAPB
-	select GPIO_GENERIC
-
-	# Gigabit Ethernet support
-	select STMMAC_ETH
-	select STMMAC_PLATFORM
-	select STMMAC_DEBUG_FS
-
-	# SPI bus support
-	select SPI_DESIGNWARE
-	select SPI_DW_MMIO
-
-	# USB Support
-	select USB_DWC3
-	select USB_DWC3_HOST
-	select USB_DWC3_BAIKAL
-	select USB_PHY
+	# Errata set
+	select PAGE_SIZE_16KB
 
 	# DTB select
 	select DTB_BAIKAL_MODULE
 
-	help
-	  Machine support for Baikal-T SOC family
-
 config MACH_BAIKAL_QEMU
 	bool "Baikal-T QEMU simulator"
 
-	# Errata set 
+	select MIPS_BAIKAL_T1
+	select BAIKAL_T_COMMON
+
 	select PAGE_SIZE_16KB
-
-	# Common
-	select PHYLIB
-	select DEBUG_LL
-	select TIMER_GENERIC
-	select ARCH_WANT_OPTIONAL_GPIOLIB
-
-	# Clock source
-	select COMMON_CLK_BAIKAL
-
-	# Serial UART
-	select SERIAL_8250
-	select SERIAL_8250_CONSOLE
-	select SERIAL_8250_EXTENDED
-	select SERIAL_8250_DW
-
-	# WatchDog
-	select DW_WATCHDOG
-
-	# Timers
-	select CLKSRC_OF
-	select DW_APB_TIMER
-	select DW_APB_TIMER_OF
-
-	# I2C Bus support
-	select I2C_DESIGNWARE_CORE
-	select I2C_DESIGNWARE_PLATFORM
-
-	# GPIO support
-	select GPIOLIB
-	select OF_GPIO
-	select GPIO_SYSFS
-	select GPIO_DWAPB
-	select GPIO_GENERIC
-
-	# Gigabit Ethernet support
-	select STMMAC_ETH
-	select STMMAC_PLATFORM
-	select STMMAC_DEBUG_FS
-
-	# SPI bus support
-	select SPI_DESIGNWARE
-	select SPI_DW_MMIO
 
 	# DTB select
 	select DTB_BAIKAL_QEMU
@@ -308,7 +182,8 @@ config MACH_BAIKAL_QEMU
 config MACH_BAIKAL_FPGA
 	bool "Baikal-T FPGA board"
 
-	# Errata set 
+	select MIPS_BAIKAL_T
+
 	select PAGE_SIZE_16KB
 
 	# Common
@@ -380,6 +255,7 @@ config DTB_BAIKAL_MITX
 	help
 	  Device tree for T-Platforms mITX boards
 	  based on Baikal-T SOC.
+
 endchoice
 
 config ARCH_NR_GPIO
@@ -387,6 +263,7 @@ config ARCH_NR_GPIO
 	range 32 512
 	default 40 if MACH_BAIKAL_BFK
 	default 40 if MACH_BAIKAL_BFK2
+	default 40 if MACH_BAIKAL_MITX
 	default 48 if MACH_BAIKAL_MODULE
 	default 32
 	help
@@ -428,8 +305,7 @@ config BAIKAL_ERRATA_GBE_PHY_MICREL
 	  If unsure, say N.
 
 endif # BAIKAL_ERRATA
-endif # ARCH_BAIKAL
-endif # MACH_BAIKAL
+endif # MIPS_BAIKAL
 
 config SYS_HAS_CPU_MIPS32_R5
 	bool

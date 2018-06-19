@@ -164,7 +164,7 @@ void dw_set_iatu_region(int dir, int index, int base_addr, int limit_addr, int t
 	wmb();	
 }
 
-#ifdef CONFIG_MACH_BAIKAL_BFK
+#ifdef CONFIG_MIPS_BAIKAL_T
 #define PLL_WAIT_RETRIES 1000
 static int dw_init_pll(const unsigned int pmu_register)
 {
@@ -192,7 +192,7 @@ static int dw_init_pll(const unsigned int pmu_register)
 
 	return OK;
 }
-#endif /* CONFIG_MACH_BAIKAL_BFK */
+#endif /* CONFIG_MIPS_BAIKAL_T */
 
 static int dw_pcie_init(void)
 {
@@ -202,11 +202,11 @@ static int dw_pcie_init(void)
 
 	/* PMU PCIe init. */
 
-#ifdef CONFIG_MACH_BAIKAL_BFK
+#ifdef CONFIG_MIPS_BAIKAL_T
 	/* Init PCIe PLL only for Baikal-T CPU  */
 	/* 2. Start BK_PMU_PCIEPLL_CTL. */
 	dw_init_pll(BK_PMU_PCIEPLL_CTL);
-#endif /* CONFIG_MACH_BAIKAL_BFK */
+#endif /* CONFIG_MIPS_BAIKAL_T */
 
 	/* 3. Read value of BK_PMU_AXI_PCIE_M_CTL, set EN bit. */
 	reg = READ_PMU_REG(BK_PMU_AXI_PCIE_M_CTL);
