@@ -80,6 +80,7 @@ int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
 
 	if (size == 4)
 		*val = readl(addr);
+#ifndef __mips__
 	else if (size == 2)
 		*val = readw(addr);
 	else if (size == 1)
@@ -88,6 +89,24 @@ int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
 		*val = 0;
 		return PCIBIOS_BAD_REGISTER_NUMBER;
 	}
+#else	/* need aligned word access */
+	else {
+		uintptr_t a = (uintptr_t)addr;
+		int adj = (a & 3) * 8;
+		u32 t;
+
+		addr = (void __iomem *)(a & ~3);
+		t = readl(addr);
+		if (size == 2)
+			*val = (t >> adj) & 0xffff;
+		else if (size == 1)
+			*val = (t >> adj) & 0xff;
+		else {
+			*val = 0;
+			return PCIBIOS_BAD_REGISTER_NUMBER;
+		}
+	}
+#endif
 
 	return PCIBIOS_SUCCESSFUL;
 }
@@ -99,12 +118,30 @@ int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val)
 
 	if (size == 4)
 		writel(val, addr);
+#ifndef __mips__
 	else if (size == 2)
 		writew(val, addr);
 	else if (size == 1)
 		writeb(val, addr);
 	else
 		return PCIBIOS_BAD_REGISTER_NUMBER;
+#else
+	else if (size != 2 && size != 1)
+		return PCIBIOS_BAD_REGISTER_NUMBER;
+	else {
+		uintptr_t a = (uintptr_t)addr;
+		int adj = (a & 3) * 8;
+		u32 t;
+
+		addr = (void __iomem *)(a & ~3);
+		t = readl(addr);
+		if (size == 2)
+			t = (t & ~(0xffff << adj)) | (val & 0xffff) << adj;
+		else
+			t = (t & ~(0xff << adj)) | (val & 0xff) << adj;
+		writel(t, addr);
+	}
+#endif
 
 	return PCIBIOS_SUCCESSFUL;
 }

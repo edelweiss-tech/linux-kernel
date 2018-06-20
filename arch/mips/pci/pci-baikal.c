@@ -32,6 +32,7 @@
 #include <asm/mips-boards/generic.h>
 #include "pci-baikal.h"
 
+#ifndef CONFIG_PCIE_DW_BAIKAL
 static struct resource dw_mem_resource = {
 	.name	= "DW PCI MEM",
 	.start	= PHYS_PCIMEM_BASE_ADDR,
@@ -69,6 +70,7 @@ static int dw_msi_irq;
 #endif /* CONFIG_PCI_MSI */
 
 static int dw_aer_irq;
+#endif
 
 #define PCIE_PHY_RETRIES	1000000
 #define PCIE_ERROR_VALUE	0xFFFFFFFF
@@ -86,11 +88,13 @@ static int dw_aer_irq;
 #define ERROR_MISMATCH7		0x0400
 #define ERROR_MISMATCH8		0x0800
 
+#ifndef CONFIG_PCIE_DW_BAIKAL
 /* Retrieve the secondary bus number of the RC */
 static int dw_pcie_get_busn(void)
 {
    return PCIE_ROOT_BUS_NUM;
 }
+#endif
 
 void baikal_find_vga_mem_init(void);
 
@@ -247,15 +251,23 @@ static int dw_pcie_init(void)
 		pr_info("%s: new PCIE_RSTC: %08x\n", __func__, reg);
 	}
 
+	/* 3.2 Set writing to RO Registers Using DBI */
+	WRITE_PCIE_REG(PCIE_MISC_CONTROL_1_OFF, DBI_RO_WR_EN);
+
+	/* set PCI bridge class */
+	reg = READ_PMU_REG(BK_PMU_PCIE_GENC);
+	reg &= ~PMU_PCIE_GENC_DBI2_MODE;
+	WRITE_PMU_REG(BK_PMU_PCIE_GENC, reg);
+	WRITE_PCIE_REG(PCIE_TYPE1_CLASS_CODE_REV_ID_REG, 0x06040001);
+
 	/* 3.1 Set DBI2 mode, dbi2_cs = 0x1 */
 	reg = READ_PMU_REG(BK_PMU_PCIE_GENC);
 	reg |= PMU_PCIE_GENC_DBI2_MODE;
 	WRITE_PMU_REG(BK_PMU_PCIE_GENC, reg);
 
-	/* 3.2 Set writing to RO Registers Using DBI */
-	WRITE_PCIE_REG(PCIE_MISC_CONTROL_1_OFF, DBI_RO_WR_EN);
-
-	/* 4.1 Allow access to the PHY registers, phy0_mgmt_pcs_reg_sel = 0x1. */
+	/* 4.1 Allow access to the PHY registers,
+	 * phy0_mgmt_pcs_reg_sel = 0x1.
+	 */
 	reg = READ_PMU_REG(BK_PMU_PCIE_GENC);
 	reg |= PMU_PCIE_GENC_MGMT_ENABLE;
 	WRITE_PMU_REG(BK_PMU_PCIE_GENC, reg);
@@ -365,6 +377,7 @@ static int dw_pcie_init(void)
 	reg |= (0x00ff0000 | (PCIE_ROOT_BUS_NUM << 8)); /* IDT PCI Bridge don't like the primary bus equals 0. */
 	WRITE_PCIE_REG(PCIE_SEC_LAT_TIMER_SUB_BUS_SEC_BUS_PRI_BUS_REG, reg);
 
+#ifndef CONFIG_PCIE_DW_BAIKAL
 	/* Setup memory base. */
 	reg = ((PHYS_PCIMEM_LIMIT_ADDR & 0xfff00000) | ((PHYS_PCIMEM_BASE_ADDR & 0xfff00000) >> 16));
 	WRITE_PCIE_REG(PCIE_MEM_LIMIT_MEM_BASE_REG, reg);
@@ -374,6 +387,7 @@ static int dw_pcie_init(void)
 	WRITE_PCIE_REG(PCIE_SEC_STAT_IO_LIMIT_IO_BASE_REG, reg);
 	reg = ((PHYS_PCIIO_LIMIT_ADDR & 0xffff0000) | ((PHYS_PCIIO_BASE_ADDR & 0xffff0000) >> 16));
 	WRITE_PCIE_REG(PCIE_IO_LIMIT_UPPER_IO_BASE_UPPER_REG, reg);
+#endif
 
 	/* 8. Set master for PCIe EP. */
 	reg = READ_PCIE_REG(PCIE_TYPE1_STATUS_COMMAND_REG);
@@ -414,8 +428,11 @@ static int dw_pcie_init(void)
 
 	/* dw_set_iatu_region(dir,  index, base_addr, limit_addr, target_addr, tlp_type) */
 
-	dw_set_iatu_region(REGION_DIR_OUTBOUND, IATU_RD0_INDEX, PHYS_PCI_RD0_BASE_ADDR >> 16,
-				PHYS_PCI_RD0_LIMIT_ADDR >> 16, 0x0000, TLP_TYPE_CFGRD0);
+#ifndef CONFIG_PCIE_DW_BAIKAL
+	dw_set_iatu_region(REGION_DIR_OUTBOUND, IATU_RD0_INDEX,
+				PHYS_PCI_RD0_BASE_ADDR >> 16,
+				PHYS_PCI_RD0_LIMIT_ADDR >> 16, 0x0000,
+				TLP_TYPE_CFGRD0);
 
 	dw_set_iatu_region(REGION_DIR_OUTBOUND, IATU_RD1_INDEX, PHYS_PCI_RD1_BASE_ADDR >> 16,
 				PHYS_PCI_RD1_LIMIT_ADDR >> 16, 0x0000, TLP_TYPE_CFGRD1);
@@ -423,8 +440,11 @@ static int dw_pcie_init(void)
 	dw_set_iatu_region(REGION_DIR_OUTBOUND, IATU_MEM_INDEX, PHYS_PCIMEM_BASE_ADDR >> 16,
 				PHYS_PCIMEM_LIMIT_ADDR >> 16, PHYS_PCIMEM_BASE_ADDR >> 16, TLP_TYPE_MEM);
 
-	dw_set_iatu_region(REGION_DIR_OUTBOUND, IATU_IO_INDEX, PHYS_PCIIO_BASE_ADDR >> 16,
-				PHYS_PCIIO_LIMIT_ADDR >> 16, PHYS_PCIIO_BASE_ADDR >> 16,  TLP_TYPE_IO);
+	dw_set_iatu_region(REGION_DIR_OUTBOUND, IATU_IO_INDEX,
+				PHYS_PCIIO_BASE_ADDR >> 16,
+				PHYS_PCIIO_LIMIT_ADDR >> 16,
+				PHYS_PCIIO_BASE_ADDR >> 16,  TLP_TYPE_IO);
+#endif
 
 	/*
 	 * Set GEN1 speed. In case EP supports GEN2
@@ -479,13 +499,21 @@ static int dw_pcie_init(void)
 
 void __init mips_pcibios_init(void)
 {
+#ifndef CONFIG_PCIE_DW_BAIKAL
 	struct pci_controller *controller;
+#endif
 
 	if (dw_pcie_init()) {
 		pr_err("%s: Init DW PCI controller failed\n", __func__);
 		return;
 	}
 
+#ifdef CONFIG_PCIE_DW_BAIKAL
+	pr_info("PCIe initialization complete.\n");
+#ifdef CONFIG_MIPS_BAIKAL_PCI_DMA
+	pci_dw_dma_init();
+#endif
+#else
 #ifdef CONFIG_PCI_MSI
 	if (dw_msi_init()) {
 		pr_err("%s: Init DW PCI MSI failed\n", __func__);
@@ -511,9 +539,11 @@ void __init mips_pcibios_init(void)
 #ifdef CONFIG_CPU_SUPPORTS_UNCACHED_ACCELERATED
 	baikal_find_vga_mem_init();
 #endif /* CONFIG_CPU_SUPPORTS_UNCACHED_ACCELERATED */
+#endif /* CONFIG_PCIE_DW_BAIKAL */
 }
 
-#ifdef CONFIG_PCIEAER	
+#ifndef CONFIG_PCIE_DW_BAIKAL
+#ifdef CONFIG_PCIEAER
 irqreturn_t aer_irq(int irq, void *context);
 #endif /* CONFIG_PCIEAER */
 
@@ -598,4 +628,4 @@ MODULE_DESCRIPTION("Baikal Electronics PCIe Driver.");
 MODULE_LICENSE("Proprietary");
 MODULE_AUTHOR("Alexey Malakhov");
 MODULE_ALIAS("platform:dw_pci");
-
+#endif /* CONFIG_PCIE_DW_BAIKAL */

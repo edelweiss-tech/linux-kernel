@@ -51,7 +51,7 @@ static int __init baikal_platform_setup(void)
    /* No critical actions - always return success */
    return 0;
 }
-late_initcall(baikal_platform_setup);
+arch_initcall(baikal_platform_setup);
 
 void baikal_be_init(void)
 {
