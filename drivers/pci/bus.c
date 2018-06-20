@@ -107,11 +107,30 @@ static struct pci_bus_region pci_high = {(pci_bus_addr_t) 0x100000000ULL,
  */
 static void pci_clip_resource_to_region(struct pci_bus *bus,
 					struct resource *res,
-					struct pci_bus_region *region)
+					struct pci_bus_region *region,
+					resource_size_t *align)
 {
 	struct pci_bus_region r;
+	resource_size_t new_align, offset;
 
 	pcibios_resource_to_bus(bus, &r, res);
+
+	offset = res->start - r.start;
+	if (offset & (*align - 1) && (r.start & (*align - 1)) == 0) {
+		/* 
+		 * a) CPU address (resource) differs from PCI bus address
+		 * (pci_bus_region), i.e. address translation is in effect;
+		 * b) PCI bus address is aligned as required;
+		 * c) CPU address is not aligned.
+		 * So, we can relax alignment requirement for CPU address.
+		 */
+		new_align = 1 << __ffs(offset);
+		dev_info(&bus->dev,
+			 "pci_clip_resource_to_region: relaxing alignment from %x to %x\n",
+			 *align, new_align);
+		*align = new_align;
+	}
+
 	if (r.start < region->start)
 		r.start = region->start;
 	if (r.end > region->end)
@@ -141,6 +160,7 @@ static int pci_bus_alloc_from_region(struct pci_bus *bus, struct resource *res,
 
 	pci_bus_for_each_resource(bus, r, i) {
 		resource_size_t min_used = min;
+		resource_size_t res_align = align;
 
 		if (!r)
 			continue;
@@ -156,7 +176,7 @@ static int pci_bus_alloc_from_region(struct pci_bus *bus, struct resource *res,
 			continue;
 
 		avail = *r;
-		pci_clip_resource_to_region(bus, &avail, region);
+		pci_clip_resource_to_region(bus, &avail, region, &res_align);
 
 		/*
 		 * "min" is typically PCIBIOS_MIN_IO or PCIBIOS_MIN_MEM to
@@ -171,7 +191,7 @@ static int pci_bus_alloc_from_region(struct pci_bus *bus, struct resource *res,
 
 		/* Ok, try it out.. */
 		ret = allocate_resource(r, res, size, min_used, max,
-					align, alignf, alignf_data);
+					res_align, alignf, alignf_data);
 		if (ret == 0)
 			return 0;
 	}

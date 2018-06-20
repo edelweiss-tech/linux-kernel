@@ -254,11 +254,11 @@ static int dw_pcie_init(void)
 	/* 3.2 Set writing to RO Registers Using DBI */
 	WRITE_PCIE_REG(PCIE_MISC_CONTROL_1_OFF, DBI_RO_WR_EN);
 
-	/* set PCI bridge class */
+	/* set PCI bridge class (subtractive decode) */
 	reg = READ_PMU_REG(BK_PMU_PCIE_GENC);
 	reg &= ~PMU_PCIE_GENC_DBI2_MODE;
 	WRITE_PMU_REG(BK_PMU_PCIE_GENC, reg);
-	WRITE_PCIE_REG(PCIE_TYPE1_CLASS_CODE_REV_ID_REG, 0x06040001);
+	WRITE_PCIE_REG(PCIE_TYPE1_CLASS_CODE_REV_ID_REG, 0x06040101);
 
 	/* 3.1 Set DBI2 mode, dbi2_cs = 0x1 */
 	reg = READ_PMU_REG(BK_PMU_PCIE_GENC);
