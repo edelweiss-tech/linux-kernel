@@ -51,8 +51,8 @@ void __init prom_free_prom_memory(void)
  */
 void __init plat_mem_setup(void)
 {
-	/* Setup dummy port segment */
-	set_io_port_base(CKSEG1);
+	/* Setup PCI I/O port base */
+	set_io_port_base(CKSEG1 + PCI_IOBASE);
 	if (config_enabled(CONFIG_EVA))
 		/* EVA should be configured in mach-baikal/kernel-init.h */
 		pr_info("Enhanced Virtual Addressing (EVA) activated\n");
@@ -77,8 +77,7 @@ int __uncached_access(struct file *file, unsigned long addr)
 	if (file->f_flags & O_DSYNC)
 		return 1;
 
-	return addr >= __pa(high_memory) ||
-		((addr >= BAIKAL_MMIO_MEM_START) &&
+	return ((addr >= BAIKAL_MMIO_MEM_START) &&
 		 (addr < BAIKAL_MMIO_MEM_END));
 }
 
