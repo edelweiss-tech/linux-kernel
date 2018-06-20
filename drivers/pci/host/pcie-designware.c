@@ -455,6 +455,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
 		pp->cfg1_size = resource_size(cfg_res)/2;
 		pp->cfg0_base = cfg_res->start;
 		pp->cfg1_base = cfg_res->start + pp->cfg0_size;
+		cfg_res->name = "PCIe config";
+		devm_request_resource(&pdev->dev, &iomem_resource, cfg_res);
 	} else if (!pp->va_cfg0_base) {
 		dev_err(pp->dev, "missing *config* reg space\n");
 	}
@@ -467,20 +469,21 @@ int dw_pcie_host_init(struct pcie_port *pp)
 	resource_list_for_each_entry(win, &res) {
 		switch (resource_type(win->res)) {
 		case IORESOURCE_IO:
-			pp->io = win->res;
-			pp->io->name = "I/O";
-			pp->io_size = resource_size(pp->io);
-			pp->io_bus_addr = pp->io->start - win->offset;
-			ret = pci_remap_iospace(pp->io, pp->io_base);
+			ret = pci_remap_iospace(win->res, pp->io_base);
 			if (ret) {
 				dev_warn(pp->dev, "error %d: failed to map resource %pR\n",
-					 ret, pp->io);
-				continue;
+					 ret, win->res);
+				resource_list_destroy_entry(win);
+			} else {
+				pp->io = win->res;
+				pp->io->name = "PCIe I/O";
+				pp->io_size = resource_size(pp->io);
+				pp->io_bus_addr = pp->io->start - win->offset;
 			}
 			break;
 		case IORESOURCE_MEM:
 			pp->mem = win->res;
-			pp->mem->name = "MEM";
+			pp->mem->name = "PCIe MEM";
 			pp->mem_size = resource_size(pp->mem);
 			pp->mem_bus_addr = pp->mem->start - win->offset;
 			break;
