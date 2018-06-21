@@ -348,7 +348,7 @@
 			};
 
 			bmc@8 {
-				compatible = "t-platforms,mitx2-bmc";
+				compatible = "tp,mitx2-bmc", "t-platforms,mitx2-bmc";
 				reg = <0x08>;
 			};
       
