@@ -202,7 +202,7 @@ static int dw_pcie_init(void)
 {
 	volatile uint32_t reg;
 	int i, st = 0;
-	uint32_t pmu_pcie_rstc_mask = 0;
+	uint32_t rstc_mask = 0;
 
 	/* PMU PCIe init. */
 
@@ -228,21 +228,29 @@ static int dw_pcie_init(void)
 	 */
 
 	reg = READ_PMU_REG(BK_PMU_PCIE_RSTC);
+#ifdef CONFIG_MIPS_BAIKAL_T1
+	/* we have Baikal-T1 chip, perform enhanced reset procedure */
 	if (reg & PMU_PCIE_RSTC_REQ_PHY_RST)
-		pmu_pcie_rstc_mask |= PMU_PCIE_RSTC_PHY_RESET;
+		rstc_mask |= PMU_PCIE_RSTC_PHY_RESET;
 	if (reg & PMU_PCIE_RSTC_REQ_CORE_RST)
-		pmu_pcie_rstc_mask |= PMU_PCIE_RSTC_CORE_RST;
+		rstc_mask |= PMU_PCIE_RSTC_CORE_RST;
 	if (reg & PMU_PCIE_RSTC_REQ_STICKY_RST)
-		pmu_pcie_rstc_mask |= PMU_PCIE_RSTC_STICKY_RST;
+		rstc_mask |= PMU_PCIE_RSTC_STICKY_RST;
 	if (reg & PMU_PCIE_RSTC_REQ_NON_STICKY_RST)
-		pmu_pcie_rstc_mask |= PMU_PCIE_RSTC_NONSTICKY_RST;
-	WRITE_PMU_REG(BK_PMU_PCIE_RSTC, reg | pmu_pcie_rstc_mask);
+		rstc_mask |= PMU_PCIE_RSTC_NONSTICKY_RST;
+#else /* !CONFIG_MIPS_BAIKAL_T1 */
+	/* we have Baikal-T chip, perform simplified reset procedure */
+	rstc_mask = (PMU_PCIE_RSTC_PHY_RESET | PMU_PCIE_RSTC_PIPE_RESET |
+		     PMU_PCIE_RSTC_CORE_RST|  PMU_PCIE_RSTC_PWR_RST |
+		     PMU_PCIE_RSTC_STICKY_RST | PMU_PCIE_RSTC_NONSTICKY_RST);
+#endif /* CONFIG_MIPS_BAIKAL_T1 */
+	WRITE_PMU_REG(BK_PMU_PCIE_RSTC, reg | rstc_mask);
 	usleep_range(10, 20);
 	reg = READ_PMU_REG(BK_PMU_PCIE_RSTC);
-	reg &= ~pmu_pcie_rstc_mask;
+	reg &= ~rstc_mask;
 	WRITE_PMU_REG(BK_PMU_PCIE_RSTC, reg);
 	reg = READ_PMU_REG(BK_PMU_PCIE_RSTC);
-	pr_info("%s: PCIE_RSTC after reset: %08x (mask was %x)\n", __func__, reg, pmu_pcie_rstc_mask);
+	pr_info("%s: PCIE_RSTC after reset: %08x (mask was %x)\n", __func__, reg, rstc_mask);
 	if (reg & 0x3f11) {
 		reg &= ~0x3f11;
 		WRITE_PMU_REG(BK_PMU_PCIE_RSTC, reg);
@@ -617,6 +625,7 @@ static int dw_pci_drv_remove(struct platform_device *pdev)
 static const struct of_device_id dw_pci_of_match[] = {
 	{ .compatible = "be,baikal-pci", },
 	{ .compatible = "snps,dw-pci", },
+	{ .compatible = "snps,dw-pcie", },
 	{ /* sentinel */ }
 };
 MODULE_DEVICE_TABLE(of, dw_pci_of_match);
