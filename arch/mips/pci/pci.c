@@ -393,3 +393,18 @@ char *__init pcibios_setup(char *str)
 		return pcibios_plat_setup(str);
 	return str;
 }
+
+#ifdef CONFIG_PCI_DRIVERS_GENERIC
+int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
+{
+	pr_debug("pci_remap_iospace: %x -> %x\n", res->start, phys_addr);
+	phys_addr -= res->start;
+	if (phys_addr & ~PAGE_MASK)
+		return -EINVAL;
+
+	set_io_port_base((unsigned long)ioremap(phys_addr, resource_size(res))
+			 + res->start);
+
+	return 0;
+}
+#endif
