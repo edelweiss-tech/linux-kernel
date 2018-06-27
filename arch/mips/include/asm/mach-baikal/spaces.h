@@ -45,7 +45,7 @@
  */
 #define IO_BASE		UNCAC_BASE
 
-#define PCI_IOBASE	_AC(0x1bd00000, UL)
+#define PCI_IOBASE	_AC(0xbbd00000, UL)	/* the value is not actually used */
 
 #include_next <spaces.h>
 
