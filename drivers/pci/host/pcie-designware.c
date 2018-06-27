@@ -447,7 +447,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
 	u32 val;
 	int i, ret;
 	LIST_HEAD(res);
-	struct resource_entry *win;
+	struct resource_entry *win, *tmp;
 
 	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
 	if (cfg_res) {
@@ -466,7 +466,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
 		return ret;
 
 	/* Get the I/O and memory ranges from DT */
-	resource_list_for_each_entry(win, &res) {
+	resource_list_for_each_entry_safe(win, tmp, &res) {
 		switch (resource_type(win->res)) {
 		case IORESOURCE_IO:
 			ret = pci_remap_iospace(win->res, pp->io_base);
@@ -475,6 +475,9 @@ int dw_pcie_host_init(struct pcie_port *pp)
 					 ret, win->res);
 				resource_list_destroy_entry(win);
 			} else {
+				ret = devm_request_resource(pp->dev, &ioport_resource, win->res);
+				if (ret)
+					dev_warn(pp->dev, "Can't request %pR\n", win->res);
 				pp->io = win->res;
 				pp->io->name = "PCIe I/O";
 				pp->io_size = resource_size(pp->io);
@@ -482,6 +485,9 @@ int dw_pcie_host_init(struct pcie_port *pp)
 			}
 			break;
 		case IORESOURCE_MEM:
+			ret = devm_request_resource(pp->dev, &iomem_resource, win->res);
+			if (ret)
+				dev_warn(pp->dev, "Can't request %pR\n", win->res);
 			pp->mem = win->res;
 			pp->mem->name = "PCIe MEM";
 			pp->mem_size = resource_size(pp->mem);
