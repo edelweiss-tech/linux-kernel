@@ -1,0 +1,13 @@
+#
+# DMA engine configuration for Baikal SoC
+#
+
+config BAIKAL_EDMA_CORE
+	bool	
+	select DMA_ENGINE
+
+config BAIKAL_EDMA
+	bool "Baikal Electronics PCIe eDMA controller"
+	select BAIKAL_EDMA_CORE
+	help
+	  Support the Baikal SoC PCIe DMA controller.
