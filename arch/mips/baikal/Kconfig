@@ -274,10 +274,6 @@ config ARCH_NR_GPIO
 
 	  If unsure, leave the default value.
 
-config MIPS_BAIKAL_PCI_DMA
-	bool "PCI DMA support"
-	default n
-
 menuconfig BAIKAL_ERRATA
 	bool "Baikal SoC Errata Fix"
 	help

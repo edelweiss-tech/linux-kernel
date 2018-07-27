@@ -530,9 +530,6 @@ void __init mips_pcibios_init(void)
 
 #ifdef CONFIG_PCIE_DW_BAIKAL
 	pr_info("PCIe initialization complete.\n");
-#ifdef CONFIG_MIPS_BAIKAL_PCI_DMA
-	pci_dw_dma_init();
-#endif
 #else
 #ifdef CONFIG_PCI_MSI
 	if (dw_msi_init()) {
@@ -551,10 +548,6 @@ void __init mips_pcibios_init(void)
 	controller->io_map_base = IO_BASE;
 	controller->io_offset = 0;
 	register_pci_controller(controller);
-
-#ifdef CONFIG_MIPS_BAIKAL_PCI_DMA
-	pci_dw_dma_init();
-#endif
 
 #ifdef CONFIG_CPU_SUPPORTS_UNCACHED_ACCELERATED
 	baikal_find_vga_mem_init();

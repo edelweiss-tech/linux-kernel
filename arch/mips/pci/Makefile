@@ -37,7 +37,6 @@ obj-$(CONFIG_MIPS_BAIKAL)	+= fixup-baikal.o pci-baikal.o ops-dw.o
 else
 obj-$(CONFIG_MIPS_BAIKAL)	+= pci-baikal.o
 endif
-obj-$(CONFIG_MIPS_BAIKAL_PCI_DMA)	+= baikal-pci-dma.o
 obj-$(CONFIG_PMC_MSP7120_GW)	+= fixup-pmcmsp.o ops-pmcmsp.o
 obj-$(CONFIG_PMC_MSP7120_EVAL)	+= fixup-pmcmsp.o ops-pmcmsp.o
 obj-$(CONFIG_PMC_MSP7120_FPGA)	+= fixup-pmcmsp.o ops-pmcmsp.o
