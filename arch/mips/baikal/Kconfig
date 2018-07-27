@@ -16,10 +16,6 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-#
 
 if MIPS_BAIKAL
 
@@ -65,7 +61,6 @@ config BAIKAL_T_COMMON
 	# HW perfomance counters
 	select HAVE_PERF_EVENTS
 	select PERF_EVENTS
-	select HW_PERF_EVENTS
 
 	# Clock source
 	select COMMON_CLK_BAIKAL
@@ -132,8 +127,8 @@ config MACH_BAIKAL_BFK
 	# DTB select
 	select DTB_BAIKAL_BFK
 
-config MACH_BAIKAL_BFK2
-	bool "Baikal-T BFK2 board"
+config MACH_BAIKAL_BFK3
+	bool "Baikal-T1 BFK3 board"
 
 	select MIPS_BAIKAL_T1
 	select BAIKAL_T_COMMON
@@ -142,7 +137,7 @@ config MACH_BAIKAL_BFK2
 	select PAGE_SIZE_16KB
 
 	# DTB select
-	select DTB_BAIKAL_BFK2
+	select DTB_BAIKAL_BFK3
 
 config MACH_BAIKAL_MITX
 	bool "Baikal-T mITX board"
@@ -155,6 +150,9 @@ config MACH_BAIKAL_MITX
 
 	# DTB select
 	select DTB_BAIKAL_MITX
+
+	# PCIe
+	select PCI_DRIVERS_GENERIC
 
 config MACH_BAIKAL_MODULE
 	bool "Baikal-T Module board"
@@ -224,11 +222,17 @@ config DTB_BAIKAL_BFK
 	  Device tree for BFK boards (for versions 1.0, 1.5, 1.6)
 	  based on Baikal-T SOC.
 
-config DTB_BAIKAL_BFK2
-	bool "Baikal-T BFK2 board"
+config DTB_BAIKAL_BFK3
+	bool "Baikal-T1 BFK3 board"
 	help
-	  Device tree for BFK2 boards (for versions 2.x)
-	  based on Baikal-T SOC.
+	  Device tree for BFK3 boards (for versions 2.0, 3.x)
+	  based on Baikal-T1 SOC.
+
+config DTB_BAIKAL_BFKX
+	bool "Baikal-T1 BFKX board"
+	help
+	  Device tree for BFKX boards (for version BFK1.6+Baikal-T1)
+	  based on Baikal-T1 SOC.
 
 config DTB_BAIKAL_MODULE
 	bool "Baikal-T 'Module' board"
@@ -247,15 +251,14 @@ config DTB_BAIKAL_FPGA
 	  Device tree for Baikal-T FPGA prototype.
 	  Simple device configuration.
 
-	help
-	  Select device tree for Baikal-T SOC based board
-
 config DTB_BAIKAL_MITX
 	bool "Baikal-T MITX board"
 	help
 	  Device tree for T-Platforms mITX boards
 	  based on Baikal-T SOC.
 
+help
+  Select device tree for Baikal-TT1 SOC based board
 endchoice
 
 config ARCH_NR_GPIO

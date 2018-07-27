@@ -1,7 +1,7 @@
 /*
- * Baikal-T1 BFK2 evaluation board device tree
+ * Baikal-T1 BFKX (BFK1.6+) evaluation board device tree
  *
- * Copyright (C) 2014-2018  Baikal Electronics JSC
+ * Copyright (C) 2014-2017  Baikal Electronics JSC
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,8 +18,8 @@
 #include  "baikal_mdio.dtsi"
 
 / {
-	model = "Baikal-T1 BFK2 evaluation board";
-	compatible = "baikal,mips", "baikal,baikal-t1-soc", "baikal,baikal-bfk2-eval-board";
+	model = "Baikal-T1 BFKX evaluation board";
+	compatible = "baikal,mips", "baikal,baikal-t1-soc", "baikal,baikal-bfk-eval-board";
 	#address-cells = <1>;
 	#size-cells = <1>;
 
@@ -64,11 +64,12 @@
 	status = "okay";
 };
 
-&gpio3 {
-	status = "okay";
-};
-
 &i2c0 {
+	codec@18 {
+		compatible = "tlv320aic310x";
+		reg = <0x18>;
+	};
+
 	gpioexp: gpioexp@20 {
 		compatible = "nxp,pca9500";
 		#gpio-cells = <2>;
@@ -78,22 +79,22 @@
 
 	eeprom@50 {
 		compatible = "atmel,24c02";
-		pagesize = <8>;
+		pagesize = <16>;
 		reg = <0x50>;
 	};
 };
 
 &i2c1 {
-	eeprom@54 {
+	eeprom@50 {
 		compatible = "atmel,24c02";
-		pagesize = <8>;
-		reg = <0x54>;
+		pagesize = <16>;
+		reg = <0x50>;
 	};
 
-	eeprom@55 {
+	eeprom@51 {
 		compatible = "atmel,24c02";
-		pagesize = <8>;
-		reg = <0x55>;
+		pagesize = <16>;
+		reg = <0x51>;
 	};
 
 	rtc@56 {
@@ -152,7 +153,7 @@
 
 &spi1 {
 	num-cs = <1>;
-	cs-gpios = <&porta 17 GPIO_ACTIVE_LOW>;
+	cs-gpios = <&porta 17 GPIO_ACTIVE_HIGH>;
 
 	status = "okay";
 };
