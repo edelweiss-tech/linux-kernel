@@ -4,6 +4,7 @@
 #include <linux/i2c.h>
 #include <linux/i2c-algo-bit.h>
 #include <linux/pci.h>
+#include <linux/dmaengine.h>
 
 #define FB_ACCEL_SMI 0xab
 
@@ -120,6 +121,8 @@ struct sm750_dev {
 	 * 3: both ctrc hw cursor enabled
 	 */
 	int hwCursor;
+	struct dma_chan *dma_chan;
+	dma_cookie_t cookie;
 };
 
 struct lynx_cursor {
@@ -216,4 +219,12 @@ int hw_sm750_pan_display(struct lynxfb_crtc *crtc,
 int sm750_setup_ddc(struct sm750_dev *);
 void sm750_remove_ddc(struct sm750_dev *);
 char *sm750_ddc_read_edid(struct i2c_adapter *);
+
+#ifdef CONFIG_SM750_DMA
+int smi_setup_dma(struct sm750_dev *sm750_dev);
+void smi_release_dma(struct sm750_dev *sm750_dev);
+#else
+#define smi_setup_dma(d)	0
+#define smi_release_dma(d)
+#endif
 #endif
