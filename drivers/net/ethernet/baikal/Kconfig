@@ -1,0 +1,35 @@
+#
+# AMD network device configuration
+#
+
+config NET_VENDOR_BAIKAL
+	bool "Baikal Electronics SoC"
+	default y
+	depends on ARCH_BAIKAL || MIPS_BAIKAL || ARM64_BAIKAL || \
+		   ARM64 || MIPS
+	---help---
+	  If you have a Baikal Electronics SoC with network (Ethernet)
+	  controller say Y.
+
+	  Note that the answer to this question does not directly affect
+	  the kernel: saying N will just case the configurator to skip all
+	  the questions regarding Baikal SoCs. If you say Y, you will be asked
+	  for your specific driver in the following questions.
+
+if NET_VENDOR_BAIKAL
+
+config BAIKAL_XGBE
+	tristate "Baikal 10GbE Ethernet driver"
+	depends on OF_NET && HAS_IOMEM
+	select PHYLIB
+	select BITREVERSE
+	select CRC32
+	select PTP_1588_CLOCK
+	---help---
+	  This driver supports the Baikal 10GbE Ethernet device found on an
+	  Baikal SoC.
+
+	  To compile this driver as a module, choose M here: the module
+	  will be called baikal-xgbe.
+
+endif # NET_VENDOR_BAIKAL
