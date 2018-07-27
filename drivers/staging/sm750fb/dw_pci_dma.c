@@ -25,7 +25,8 @@ MODULE_PARM_DESC(dmadev, "DMA device name");
 static bool smi_dma_filter(struct dma_chan *chan, void *param)
 {
 	char *dmadev = param;
-pr_info("smi_dma_filter: name %s\n", chan->device->dev->driver->name);
+
+	pr_debug("smi_dma_filter: name %s\n", chan->device->dev->driver->name);
 	if (strncmp(chan->device->dev->driver->name, dmadev, strlen(dmadev)))
 		return false;
 	return baikal_dma_wr_chan_filter(chan, chan->private);
