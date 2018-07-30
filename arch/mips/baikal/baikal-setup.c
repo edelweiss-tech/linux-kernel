@@ -28,6 +28,8 @@
 
 #include "common.h"              /* Common Baikal definitions */
 
+extern int dw_pcie_init(void);
+
 static void __init plat_setup_iocoherency(void)
 {
    if (mips_cm_numiocu() != 0) {
@@ -44,14 +46,22 @@ static int __init baikal_platform_setup(void)
 {
 #ifdef CONFIG_PCI
    /* PCI init */
+#ifdef CONFIG_PCIE_DW_BAIKAL
+   dw_pcie_init();
+#else
    mips_pcibios_init();
+#endif
 #endif
    /* Setup IO Coherency */
    plat_setup_iocoherency();
    /* No critical actions - always return success */
    return 0;
 }
+#ifdef CONFIG_PCIE_DW_BAIKAL
 arch_initcall(baikal_platform_setup);
+#else
+late_initcall(baikal_platform_setup);
+#endif
 
 void baikal_be_init(void)
 {
