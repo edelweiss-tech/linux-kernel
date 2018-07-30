@@ -266,7 +266,7 @@ config ARCH_NR_GPIO
 	range 32 512
 	default 40 if MACH_BAIKAL_BFK
 	default 40 if MACH_BAIKAL_BFK2
-	default 40 if MACH_BAIKAL_MITX
+	default 48 if MACH_BAIKAL_MITX
 	default 48 if MACH_BAIKAL_MODULE
 	default 32
 	help
