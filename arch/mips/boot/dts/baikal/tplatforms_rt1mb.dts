@@ -1,0 +1,525 @@
+/*
+ * Baikal-T BFK2 board device tree.
+ *
+ * Copyright (C) 2014-2016  Baikal Electronics JSC
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
+
+#include <dt-bindings/interrupt-controller/mips-gic.h>
+#include <dt-bindings/gpio/gpio.h>
+
+/dts-v1/;
+
+/include/ "baikal_t1_clocks.dtsi"
+
+/ {
+	model = "Baikal-T BFK2 Board";
+	compatible = "baikal,mips";
+	#address-cells = <1>;
+	#size-cells = <1>;
+	interrupt-parent = <&gic>;
+
+	aliases {
+		gic = &gic;
+		serial0 = &uart0;
+		serial1 = &uart1;
+		i2c0 = &i2c0;
+		i2c1 = &i2c1;
+		ssi0 = &spi0;
+		ssi1 = &spi1;
+		ethernet0 = &gmac0;
+		ethernet1 = &gmac1;
+		//ethernet2 = &xgmac;
+		//mdio-gpio0 = &mdio0;
+	};
+
+	chosen {
+		bootargs = "root=/dev/ram rw rootwait console=ttyS0,115200n8 earlyprintk=uart8250,mmio32,0x1F04A000,115200 maxcpus=2 nohtw";
+		linux,initrd-start = <0x01000000>;
+		linux,initrd-end   = <0x02000000>;
+	};
+
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		CPU0: cpu@0 {
+			device_type = "cpu";
+			compatible = "mti,p5600";
+			reg = <0x0>;
+			clocks = <&cpu_clk 0>;
+			clock-names = "cpuclk";
+		};
+
+		CPU1: cpu@1 {
+			device_type = "cpu";
+			compatible = "mti,p5600";
+			reg = <0x1>;
+			clocks = <&cpu_clk 0>;
+			clock-names = "cpuclk";
+		};
+	};
+
+	memory {
+		device_type = "memory";
+		reg = <0x00000000 0x08000000>,
+		      <0x20000000 0x70000000>;
+	};
+
+	gic: gic@1BDC0000 {
+		compatible = "mti,gic";
+		reg = <0x1BDC0000 0x20000>;
+
+		interrupt-controller;
+		#interrupt-cells = <3>;
+
+		mti,reserved-ipi-vectors = <108 4>;
+
+		timer:timer {
+			compatible = "mti,gic-timer";
+			interrupts = <GIC_LOCAL 1 IRQ_TYPE_NONE>;
+			clock-frequency = <600000000>;
+			clocks = <&gic_clk 0>;
+			clock-names = "gicclk";
+		};
+	};
+	axi {
+		compatible = "simple-bus";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		interrupt-parent = <&gic>;
+
+		ranges;
+
+		gic_wdt:gic_wdt {
+			compatible = "be,gic-wdt";
+			interrupts = <GIC_LOCAL 0 IRQ_TYPE_NONE>;
+			clock-frequency = <600000000>;
+			clocks = <&gic_clk 0>;
+			clock-names = "gicclk";
+		};
+
+		dma: dma@1f041000 {
+			compatible = "snps,dma-spear1340";
+			reg = <0x1f041000 0x1000>;
+			interrupts = <GIC_SHARED 56 IRQ_TYPE_LEVEL_HIGH>;
+			dma-channels = <8>;
+			dma-requests = <16>;
+			dma-masters = <2>;
+			#dma-cells = <3>;
+			chan_allocation_order = <1>;
+			chan_priority = <1>;
+			block_size = <0xfff>;
+			data_width = <3 3 0 0>;
+			clocks = <&dma_clk 0>;
+			clock-names = "hclk";
+		};
+
+		sata@1F050000 {
+			interrupt-parent = <&gic>;
+			compatible = "snps,dwc-ahci", "generic-ahci";
+			reg = <0x1F050000 0x2000>;
+			interrupts = <GIC_SHARED 64 IRQ_TYPE_LEVEL_HIGH>;
+			ports-implemented = <3>;
+			clocks = <&sata_clk 0>;
+			clock-names = "sataclk";
+		};
+
+
+
+    /*            mdio0: be-mdio { */
+    /*                    compatible = "be,mdio-gpio"; */
+    /*                    #address-cells = <1>; */
+    /*                    #size-cells = <0>; */
+    /*                    mdc-pin = <&porta 9 GPIO_ACTIVE_HIGH>; */
+    /*                    mdo-pin = <&porta 10 GPIO_ACTIVE_HIGH>; */
+    /*                    mdio-pin = <&porta 11 GPIO_ACTIVE_HIGH>; */
+    /*                    rst-pin = <&porta 27 GPIO_ACTIVE_HIGH>; */
+    /*                    clocks = <&gpio_clk 0>; */
+    /*                    clock-names = "gpioclk"; */
+
+    /*                    mv_ch0:88X2222@0C { */
+    /*                            compatible = "marvell,88x2222", "ethernet-phy-ieee802.3-c45"; */
+    /*                            reg = <0x0C>; */
+    /*                            phy-mode = "xgmii"; */
+    /*                            mv,line-mode = <0>; /\* 10GBASE-R (0x71) *\/ */
+    /*                            mv,host-mode = <0>; /\* 10GBASE-R (0x71) *\/ */
+    /*                    }; */
+
+    /*                    mv_ch1:88X2222@0D { */
+    /*                            compatible = "marvell,88x2222", "ethernet-phy-ieee802.3-c45"; */
+    /*                            reg = <0x0D>; */
+    /*                            phy-mode = "xgmii"; */
+    /*                            mv,line-mode = <0>; /\* 10GBASE-R (0x71) *\/ */
+    /*                            mv,host-mode = <0>; /\* 10GBASE-R (0x71) *\/ */
+    /*                    }; */
+
+    /*                    mv_ch2:88X2222@0E { */
+    /*                            compatible = "marvell,88x2222", "ethernet-phy-ieee802.3-c45"; */
+    /*                            reg = <0x0E>; */
+    /*                            phy-mode = "xgmii"; */
+    /*                            mv,line-mode = <0>; /\* 10GBASE-R (0x71) *\/ */
+    /*                            mv,host-mode = <0>; /\* 10GBASE-R (0x71) *\/ */
+    /*                    }; */
+
+    /*                    mv_ch3:88X2222@0F { */
+    /*                            compatible = "marvell,88x2222", "ethernet-phy-ieee802.3-c45"; */
+    /*                            reg = <0x0F>; */
+    /*                            phy-mode = "xgmii"; */
+    /*                            mv,line-mode = <0>; /\* 10GBASE-R (0x71) *\/ */
+    /*                            mv,host-mode = <0>; /\* 10GBASE-R (0x71) *\/ */
+    /*                    }; */
+    /*            }; */
+
+		/* xgmac: eth0@1F054000 { */
+		/* 	compatible = "be,baikal-xgbe"; */
+		/* 	reg = <0x1F054000 0x4000>, */
+		/* 	      <0x1F05D000 0x1000>; */
+		/* 	interrupt-parent = <&gic>; */
+		/* 	interrupts = <GIC_SHARED 74 IRQ_TYPE_LEVEL_HIGH>, */
+    /*                                  <GIC_SHARED 75 IRQ_TYPE_LEVEL_HIGH>, */
+    /*                                  <GIC_SHARED 76 IRQ_TYPE_LEVEL_HIGH>, */
+    /*                                  <GIC_SHARED 77 IRQ_TYPE_LEVEL_HIGH>, */
+    /*                                  <GIC_SHARED 78 IRQ_TYPE_LEVEL_HIGH>, */
+    /*                                  <GIC_SHARED 79 IRQ_TYPE_LEVEL_HIGH>; */
+    /*                     be,per-channel-interrupt; */
+    /*                     fsl,num-rx-queues=<3>; */
+		/* 	clocks = <&xgmac_dma 0>, <&xgmac_ptp 0>, <&div_156m 0>; */
+		/* 	clock-names = "dma_clk", "ptp_clk", "xgbe_clk"; */
+    /*                    be,external-clock; */
+		/* 	phy-handle = <&cpu_port>; */
+		/* 	phy-mode = "xgmii"; */
+		/* 	be,speed-set = <1>; */
+		/* 	be,mode-set = <0>; */
+		/* 	mac-address = [ 00 20 13 ba 1c a1 ]; */
+		/* 	local-mac-address = [ 00 20 13 ba 1c a1 ]; */
+		/* }; */
+
+		gmac0: eth1@1F05E000 {
+			compatible = "be,dwmac", "snps,dwmac-3.710", "snps,dwmac";
+			reg = <0x1F05E000 0x2000>;
+			interrupt-parent = <&gic>;
+			interrupts = <GIC_SHARED 72 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-names = "macirq";
+			phy-mode = "rgmii_rxid";
+			clocks = <&gmac0_clk 0>;
+			clock-names = "stmmaceth";
+			mac-address = [ 7a 72 6c 4a 7a 07 ];
+			local-mac-address = [ 7a 72 6c 4a 7a 07 ];
+			txd0-skew-ps = <0>;
+			txd1-skew-ps = <0>;
+			txd2-skew-ps = <0>;
+			txd3-skew-ps = <0>;
+			txc-skew-ps  = <0xff>;
+		};
+
+		gmac1: eth2@1F060000 {
+			compatible = "be,dwmac", "snps,dwmac-3.710", "snps,dwmac";
+			reg = <0x1F060000 0x2000>;
+			interrupt-parent = <&gic>;
+			interrupts = <GIC_SHARED 73 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-names = "macirq";
+			phy-mode = "rgmii_rxid";
+			clocks = <&gmac1_clk 0>;
+			clock-names = "stmmaceth";
+			mac-address = [ 7a 72 6c 4a 7b 07 ];
+			local-mac-address = [ 7a 72 6c 4a 7b 07 ];
+			txd0-skew-ps = <0>;
+			txd1-skew-ps = <0>;
+			txd2-skew-ps = <0>;
+			txd3-skew-ps = <0>;
+			txc-skew-ps  = <0xff>;
+		};
+
+		usb3: usb@1F04D050 {
+			compatible = "be,baikal-dwc3";
+
+			reg = <0x1F04D050 0x0004>;
+			interrupts = <GIC_SHARED 69 IRQ_TYPE_LEVEL_HIGH>;
+
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			clocks = <&usb_clk 0>;
+			clock-names = "usb";
+
+			ranges;
+
+			dwc3@1F100000 {
+				compatible = "snps,dwc3", "synopsys,dwc3";
+				reg = <0x1F100000 0x10000>;
+				interrupts = <GIC_SHARED 68 IRQ_TYPE_LEVEL_HIGH>;
+				dr_mode = "host";
+
+				tx-fifo-resize;
+
+				maximum-speed = "high-speed";
+			};
+		};
+
+		pci: pci@1F052000 {
+			compatible = "snps,dw-pci";
+			interrupts = <GIC_SHARED 88 IRQ_TYPE_LEVEL_HIGH>,
+				<GIC_SHARED 89 IRQ_TYPE_LEVEL_HIGH>;
+			reg = <0x1F052000 0x1000>;
+		};
+
+		emc@1F042000 {
+			compatible = "be,emc", "be,memory-controller";
+			reg = <0x1F042000 0x1000>;
+			interrupts = <GIC_SHARED 96 IRQ_TYPE_LEVEL_HIGH>,
+						 <GIC_SHARED 97 IRQ_TYPE_LEVEL_HIGH>,
+						 <GIC_SHARED 98 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&ddr_pll 0>;
+			clock-names = "ddrclk";
+		};
+
+		apb_ehb@1F059000 {
+			compatible = "be,apb-ehb";
+			reg = <0x1f059000 0x1000>;
+			interrupts = <GIC_SHARED 16 IRQ_TYPE_LEVEL_HIGH>;
+		};
+
+		axi_ehb@1F04D110 {
+			compatible = "be,axi-ehb";
+			reg = <0x1F04D110 0x8>;
+			interrupts = <GIC_SHARED 127 IRQ_TYPE_LEVEL_HIGH>;
+		};
+	};
+
+	apb {
+		compatible = "simple-bus";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		interrupt-parent = <&gic>;
+
+		ranges;
+
+		timer0: timer0@1F049000 {
+			compatible = "snps,dw-apb-timer-osc";
+			interrupts = <GIC_SHARED 24 IRQ_TYPE_LEVEL_HIGH>;
+			reg = <0x1F049000 0x14>;
+			clocks = <&timer0_clk 0>;
+			clock-names = "timer";
+		};
+
+		timer1: timer1@1F049014 {
+			compatible = "snps,dw-apb-timer-sp";
+			reg = <0x1F049014 0x14>;
+			interrupts = <GIC_SHARED 25 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&timer1_clk 0>;
+			clock-names = "timer";
+		};
+
+		timer2: timer2@1F049028 {
+			compatible = "snps,dw-apb-timer-sp";
+			reg = <0x1F049028 0x14>;
+			interrupts = <GIC_SHARED 26 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&timer2_clk 0>;
+			clock-names = "timer";
+		};
+
+		uart0: serial0@1F04A000 {
+			compatible = "snps,dw-apb-uart";
+			reg = <0x1F04A000 0x1000>;
+			interrupts = <GIC_SHARED 48 IRQ_TYPE_LEVEL_HIGH>;
+			reg-shift = <2>;
+			reg-io-width = <4>;
+			clocks = <&uart_clk 0>, <&apb_clk 0>;
+			clock-names = "baudclk", "apb_pclk";
+//			snps,uart-16550-compatible;
+			dcd-override;
+			dsr-override;
+			cts-override;
+			ri-override;
+		};
+
+		uart1: serial1@1F04B000 {
+			compatible = "snps,dw-apb-uart";
+			reg = <0x1F04B000 0x1000>;
+			interrupts = <GIC_SHARED 49 IRQ_TYPE_LEVEL_HIGH>;
+			reg-shift = <2>;
+			reg-io-width = <4>;
+			clocks = <&uart_clk 0>, <&apb_clk 0>;
+			clock-names = "baudclk", "apb_pclk";
+		};
+
+		wdt: watchdog@1F04C000 {
+			compatible = "snps,dw-wdt";
+			reg = <0x1F04C000 0x1000>;
+			interrupts = <GIC_SHARED 17 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&wdt_clk 0>;
+			clock-names = "wdtclk";
+		};
+
+		efuse: efuse@1F201000 {
+			compatible = "baikal,efuse";
+			reg = <0x1F201000 0x1000>;
+		};
+
+		i2c0: i2c0@1F046000 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			compatible = "snps,designware-i2c";
+			reg = <0x1F046000 0x1000>;
+			interrupts = <GIC_SHARED 33 IRQ_TYPE_LEVEL_HIGH>;
+			clock-frequency = <100000>;
+			clocks = <&i2c0_clk 0>;
+			clock-names = "i2c0clk";
+		};
+
+		i2c1: i2c1@1F047000 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			compatible = "snps,designware-i2c";
+			reg = <0x1F047000 0x1000>;
+			interrupts = <GIC_SHARED 34 IRQ_TYPE_LEVEL_HIGH>;
+			clock-frequency = <100000>;
+			clocks = <&i2c1_clk 0>;
+			clock-names = "i2c1clk";
+
+			i2c-switch@70 {
+				compatible = "nxp,pca9548";
+				#address-cells = <1>;
+				#size-cells = <0>;
+				reg = <0x70>;
+
+				i2c@1 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					reg = <1>;
+				};
+
+				i2c@2 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					reg = <2>;
+				};
+
+				i2c@4 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					reg = <4>;
+				};
+
+				i2c@5 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					reg = <5>;
+					eeprom@53 {
+						compatible = "atmel,24c512";
+						reg = <0x53>;
+						pagesize = <128>;
+					};
+				};
+
+				i2c@6 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					reg = <6>;
+					eeprom@50 {
+						compatible = "atmel,24c512";
+						reg = <0x50>;
+						pagesize = <128>;
+					};
+				};
+
+				i2c@7 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					reg = <7>;
+					rtc@51 {
+						compatible = "nxp,pcf2129";
+						reg = <0x51>;
+					};
+				};
+			};
+
+		};
+
+		spi0: spi0@1F04E000 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			compatible = "snps,dw-apb-ssi", "snps,dw-spi";
+			reg = <0x1F04E000 0x1000>;
+			interrupts = <GIC_SHARED 40 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&spi0_clk 0>;
+			clock-names = "spi0clk";
+			num-cs = <0>;
+		};
+
+		spi1: spi1@1F04F000 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			compatible = "snps,dw-apb-ssi", "snps,dw-spi";
+			reg = <0x1F04F000 0x1000>;
+			interrupts = <GIC_SHARED 41 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&spi1_clk 0>;
+			clock-names = "spi1clk";
+			num-cs = <0>;
+		};
+
+		gpio: gpio@1F044000 {
+			compatible = "snps,dw-apb-gpio";
+			reg = <0x1F044000 0x1000>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			porta: gpio-controller@0 {
+				compatible = "snps,dw-apb-gpio-port";
+				#gpio-cells = <2>;
+				gpio-controller;
+				snps,nr-gpios = <32>;
+				reg = <0>;
+				#interrupt-cells = <2>;
+				interrupt-controller;
+				interrupts = <GIC_SHARED 19 IRQ_TYPE_LEVEL_HIGH>;
+
+				usb_rst_line {
+					gpio-hog;
+					gpios = <18 0>;
+					output-high;
+					line-name = "usb-rst";
+				};
+			};
+		};
+
+		pvt: pvt@1F200000 {
+			compatible = "baikal,pvt";
+			reg = <0x1F200000 0x2C>;
+			interrupt-parent = <&gic>;
+			interrupts = <GIC_SHARED 31 IRQ_TYPE_LEVEL_HIGH>;
+		};
+        
+		/* 64 KiB SRAM at address 0x1BF80000 */
+		sram: sram@1BF80000 {
+			compatible = "mmio-sram";
+			reg = <0x1BF80000 0x10000>;
+
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			ranges = <0 0x1BF80000 0x10000>;
+
+			smp-sram@0 {
+				compatible = "be,smp-sram";
+				reg = <0 0x10000>;
+				label="Internal SRAM";
+				export;
+			};
+		};
+	};
+};
