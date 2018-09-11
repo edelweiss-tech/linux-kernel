@@ -175,6 +175,7 @@ static int smi_ttm_io_mem_reserve(struct ttm_bo_device *bdev,
 static void smi_ttm_io_mem_free(struct ttm_bo_device *bdev, struct ttm_mem_reg *mem)
 {
 }
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4,8,0)
 static int smi_bo_move(struct ttm_buffer_object *bo,
 		       bool evict, bool interruptible,
@@ -215,6 +216,46 @@ struct ttm_tt *smi_ttm_tt_create(struct ttm_bo_device *bdev,
 	return tt;
 }
 
+#ifdef CONFIG_SMIFB_USE_DMA
+/* Allocate contiguous paged for DMA */
+static int smi_ttm_alloc_contig(struct ttm_tt *ttm)
+{
+	unsigned long num_pages, allocated;
+	int order, i;
+	struct page *page;
+
+	num_pages = ttm->num_pages;
+	order = get_order(num_pages << PAGE_SHIFT);
+	page = alloc_pages(GFP_HIGHUSER, order);
+	if (!page) {
+		pr_err("smi_ttm_alloc_contig: no memory!\n");
+		return -ENOMEM;
+	}
+	allocated = 1 << order;
+	ttm->pages[0] = page++;
+	for (i = 1; i < num_pages; i++) {
+		init_page_count(page);
+		ttm->pages[i] = page++;
+	}
+
+	ttm->state = tt_unbound;
+	return 0;
+}
+
+static void smi_ttm_free_pages(struct ttm_tt *ttm)
+{
+	int i;
+
+	for (i = 1; i < ttm->num_pages; i++) {
+		put_page_testzero(ttm->pages[i]);
+		ttm->pages[i] = NULL;
+	}
+	__free_pages(ttm->pages[0], get_order(ttm->num_pages << PAGE_SHIFT));
+	ttm->pages[0] = NULL;
+	ttm->state = tt_unpopulated;
+}
+#endif
+
 static int smi_ttm_tt_populate(struct ttm_tt *ttm)
 {
 	bool slave = !!(ttm->page_flags & TTM_PAGE_FLAG_SG);
@@ -229,6 +270,11 @@ static int smi_ttm_tt_populate(struct ttm_tt *ttm)
 		return 0;
 	}
 	
+#ifdef CONFIG_SMIFB_USE_DMA
+	if (ttm->num_pages > 1 )
+		return smi_ttm_alloc_contig(ttm);
+#endif
+
 	return ttm_pool_populate(ttm);
 }
 
@@ -239,6 +285,10 @@ static void smi_ttm_tt_unpopulate(struct ttm_tt *ttm)
 	if (slave)
 		return;
 
+#ifdef CONFIG_SMIFB_USE_DMA
+	if (ttm->num_pages > 1)
+		smi_ttm_free_pages(ttm);
+#endif
 	ttm_pool_unpopulate(ttm);
 }
 
@@ -440,6 +490,7 @@ int smi_bo_pin(struct smi_bo *bo, u32 pl_flag, u64 *gpu_addr)
 		return ret;
 
 	bo->pin_count = 1;
+	ttm_mem_io_reserve(bo->bo.bdev, &bo->bo.mem);
 	if (gpu_addr)
 		*gpu_addr = smi_bo_gpu_offset(bo);
 	return 0;
@@ -462,6 +513,7 @@ int smi_bo_unpin(struct smi_bo *bo)
 #else
 		bo->placements[i] &= ~TTM_PL_FLAG_NO_EVICT;
 #endif		
+	ttm_mem_io_free(bo->bo.bdev, &bo->bo.mem);
 	ret = ttm_bo_validate(&bo->bo, &bo->placement, false, false);
 	if (ret)
 		return ret;

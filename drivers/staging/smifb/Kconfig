@@ -12,3 +12,8 @@ config DRM_SMIFB
 	  Choose this option if you have a system with SiliconMotion
 	  sm750 or sm768 Graphics.
 
+config SMIFB_USE_DMA
+	bool "Used DMA for RAM to VRAM transfers"
+	depends on DRM_SMIFB && BAIKAL_EDMA
+	default y if MIPS_BAIKAL
+
