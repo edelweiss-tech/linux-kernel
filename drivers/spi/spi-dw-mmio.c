@@ -37,6 +37,12 @@ static int dw_spi_mmio_probe(struct platform_device *pdev)
 	int ret;
 	int num_cs;
 
+	if (pdev->dev.dma_mask) {
+		dev_info(&pdev->dev, "DMA is not supported. Clearing dma_mask (%llx)\n",
+			 *pdev->dev.dma_mask);
+		pdev->dev.dma_mask = NULL;
+	}
+
 	dwsmmio = devm_kzalloc(&pdev->dev, sizeof(struct dw_spi_mmio),
 			GFP_KERNEL);
 	if (!dwsmmio)
