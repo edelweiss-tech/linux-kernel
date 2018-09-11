@@ -925,6 +925,14 @@ mmc_spi_data_do(struct mmc_spi_host *host, struct mmc_command *cmd,
 
 			dma_addr = dma_map_page(dma_dev, sg_page(sg), 0,
 						PAGE_SIZE, dir);
+
+			/* must check for mapping error! */
+			if (dma_mapping_error(dma_dev, dma_addr)) {
+				dev_err(&host->spi->dev, "dma_map_page error\n");
+				status = -EIO;
+				break;
+			}
+
 			if (direction == DMA_TO_DEVICE)
 				t->tx_dma = dma_addr + sg->offset;
 			else
@@ -1393,8 +1401,12 @@ static int mmc_spi_probe(struct spi_device *spi)
 		host->dma_dev = dev;
 		host->ones_dma = dma_map_single(dev, ones,
 				MMC_SPI_BLOCKSIZE, DMA_TO_DEVICE);
+		if (dma_mapping_error(dev, host->ones_dma))
+			host->ones_dma = 0;
 		host->data_dma = dma_map_single(dev, host->data,
 				sizeof(*host->data), DMA_BIDIRECTIONAL);
+		if (dma_mapping_error(dev, host->data_dma))
+			host->data_dma = 0;
 
 		/* REVISIT in theory those map operations can fail... */
 
