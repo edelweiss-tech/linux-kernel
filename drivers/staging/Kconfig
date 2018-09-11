@@ -112,4 +112,6 @@ source "drivers/staging/most/Kconfig"
 
 source "drivers/staging/mitx_bmc/Kconfig"
 
+source "drivers/staging/smifb/Kconfig"
+
 endif # STAGING
