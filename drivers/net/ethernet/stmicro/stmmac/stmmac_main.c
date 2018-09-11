@@ -1725,6 +1725,10 @@ static int stmmac_hw_setup(struct net_device *dev, bool init_ptp)
 		return ret;
 	}
 
+#ifdef CONFIG_MIPS_BAIKAL
+	phy_init_hw(priv->phydev);
+#endif
+
 	/* Copy the MAC addr into the HW  */
 	priv->hw->mac->set_umac_addr(priv->hw, dev->dev_addr, 0);
 

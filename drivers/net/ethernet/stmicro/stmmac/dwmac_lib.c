@@ -37,12 +37,14 @@ int dwmac_dma_reset(void __iomem *ioaddr)
 
 #ifdef CONFIG_MIPS_BAIKAL_T1
 	/* Clear PHY reset */
+	msleep(10);
 	value = readl(ioaddr + GMAC_GPIO);
 	value |= GMAC_GPIO_GPO0;
 	writel(value, ioaddr + GMAC_GPIO);
+	msleep(10);
 #endif /* CONFIG_MIPS_BAIKAL_T1 */
 	
-	limit = 10;
+	limit = 100;
 	while (limit--) {
 		if (!(readl(ioaddr + DMA_BUS_MODE) & DMA_BUS_MODE_SFT_RESET))
 			break;
