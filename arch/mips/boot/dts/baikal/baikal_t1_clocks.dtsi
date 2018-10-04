@@ -1,21 +1,12 @@
 /*
- * Baikal-T1 SOC clock tree.
+ * Baikal-T1 SOC clock tree
  *
- * Copyright (C) 2014,2015  Baikal Electronics OJSC
+ * Copyright (C) 2014-2017  Baikal Electronics JSC
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
 / {
@@ -32,9 +23,8 @@
 			clock-frequency  = <25000000>;
 			clock-output-names = "osc25";
 		};
-        
 
-        /*** primary clock domains ***/
+		/*** primary clock domains ***/
 
 		core_pll: core_pll@1F04D000 {
 			compatible = "be,pmu-pll-clock";
@@ -82,9 +72,9 @@
 		};
 
 
-        /******** clocks ********/
+		/******** clocks ********/
 
-        /** core_pll domain **/
+		/** core_pll domain **/
 		cpu_clk:cpu_clk {
 			compatible = "fixed-factor-clock";
 			clocks = <&core_pll 0>;
@@ -105,7 +95,7 @@
 			clock-output-names = "gicclk";
 		};
 
-        /** pcie_pll domain **/
+		/** pcie_pll domain **/
 		axi_clk:axi_clk {
 			compatible = "fixed-factor-clock";
 			clocks = <&pcie_pll 0>;
@@ -137,7 +127,7 @@
 			nobypass;
 		};
 
-        /** sata_pll domain **/
+		/** sata_pll domain **/
 		sata_clk:sata_clk@1F04D060 {
 			compatible = "be,pmu-device-clock";
 			#clock-cells = <1>;
@@ -149,7 +139,7 @@
 			nobypass;
 		};
 
-        /** eth_pll domain **/
+		/** eth_pll domain **/
 		div_125m:div_125m {
 			compatible = "fixed-factor-clock";
 			clocks = <&eth_pll 0>;
@@ -170,17 +160,17 @@
 			clock-output-names = "div156m";
 		};
 
-        uart_clk:uart_clk@1F04D084 {
-            compatible = "be,pmu-device-clock";
-            #clock-cells = <1>;
-            clocks = <&eth_pll 0>;
-            clock-names = "ethpll";
-            reg = <0x1F04D084 0x0004>;
-            clock-output-names = "baudclk";
-            divider-width = <9>;
-        };
-        
-        /** osc25 derivatives **/
+		uart_clk:uart_clk@1F04D084 {
+			compatible = "be,pmu-device-clock";
+			#clock-cells = <1>;
+			clocks = <&eth_pll 0>;
+			clock-names = "ethpll";
+			reg = <0x1F04D084 0x0004>;
+			clock-output-names = "baudclk";
+			divider-width = <9>;
+		};
+
+		/** osc25 derivatives **/
 		timer0_clk:timer0_clk@1F04D088 {
 			compatible = "be,pmu-device-clock";
 			#clock-cells = <1>;
@@ -242,9 +232,9 @@
 			clock-output-names = "div1m";
 		};
 
-        /*** secondary clock domains ***/
-        
-        /** pcie_pll -> apb_clk domain **/
+		/*** secondary clock domains ***/
+
+		/** pcie_pll -> apb_clk domain **/
 		dma_clk:dma_clk {
 			compatible = "fixed-factor-clock";
 			clocks = <&apb_clk 0>;
@@ -286,7 +276,7 @@
 			clock-output-names = "bootclk";
 		};
 
-        /** eth_pll -> div_125m domain **/
+		/** eth_pll -> div_125m domain **/
 		gmac0_clk:gmac0_clk@1F04D068 {
 			compatible = "be,pmu-device-clock";
 			#clock-cells = <1>;
@@ -317,7 +307,6 @@
 			divider-width = <0>;
 		};
 
-
 		i2c0_clk:i2c0_clk {
 			compatible = "fixed-factor-clock";
 			clocks = <&div_125m 0>;
@@ -338,7 +327,7 @@
 			clock-output-names = "i2c1clk";
 		};
 
-        /** eth_pll -> div_156m domain **/
+		/** eth_pll -> div_156m domain **/
 		xgmac_dma:xgmac_dma@1F04D070 {
 			compatible = "be,pmu-device-clock";
 			#clock-cells = <1>;
@@ -361,7 +350,7 @@
 			clock-output = "ptp_clk";
 		};
 
-        /** osc25 -> div_1m domain **/
+		/** osc25 -> div_1m domain **/
 		wdt_clk:wdt_clk@1F04D080 {
 			compatible = "be,pmu-device-clock";
 			#clock-cells = <1>;

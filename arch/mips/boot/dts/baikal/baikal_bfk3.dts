@@ -1,5 +1,5 @@
 /*
- * Baikal-T1 BFK2 evaluation board device tree
+ * Baikal-T1 BFK3 evaluation board device tree
  *
  * Copyright (C) 2014-2018  Baikal Electronics JSC
  *
@@ -18,8 +18,8 @@
 #include  "baikal_mdio.dtsi"
 
 / {
-	model = "Baikal-T1 BFK2 evaluation board";
-	compatible = "baikal,mips", "baikal,baikal-t1-soc", "baikal,baikal-bfk2-eval-board";
+	model = "Baikal-T1 BFK3 evaluation board";
+	compatible = "baikal,mips", "baikal,baikal-t1-soc", "baikal,baikal-bfk3-eval-board";
 	#address-cells = <1>;
 	#size-cells = <1>;
 
@@ -69,33 +69,9 @@
 };
 
 &i2c0 {
-	gpioexp: gpioexp@20 {
-		compatible = "nxp,pca9500";
-		#gpio-cells = <2>;
-		reg = <0x20>;
-		gpio-controller;
-	};
-
-	eeprom@50 {
-		compatible = "atmel,24c02";
-		pagesize = <8>;
-		reg = <0x50>;
-	};
 };
 
 &i2c1 {
-	eeprom@54 {
-		compatible = "atmel,24c02";
-		pagesize = <8>;
-		reg = <0x54>;
-	};
-
-	eeprom@55 {
-		compatible = "atmel,24c02";
-		pagesize = <8>;
-		reg = <0x55>;
-	};
-
 	rtc@56 {
 		compatible = "abracon,abeoz9s3";
 		reg = <0x56>;
@@ -112,27 +88,11 @@
 
 &spi0 {
 	reg-io-width = <4>;
-	num-cs = <3>;
-	cs-gpios = <&porta 23 GPIO_ACTIVE_LOW>,
-			   <&porta 28 GPIO_ACTIVE_LOW>,
-			   <&porta 29 GPIO_ACTIVE_LOW>;
+	num-cs = <2>;
+	cs-gpios = <&portb 0 GPIO_ACTIVE_LOW>,
+			   <&portb 1 GPIO_ACTIVE_LOW>;
 
 	status = "okay";
-
-	flash@0 {
-		#address-cells = <1>;
-		#size-cells = <1>;
-		status = "okay";
-		compatible = "micron,n25q256a", "jedec,spi-nor";
-		reg = <0>;
-		spi-max-frequency = <10000000>;
-		/* m25p,fast-read; */
-
-		mtd@00000000 {
-			label = "flash0";
-			reg = <0x00000000 0x02000000>;
-		};
-	};
 
 	flash@1 {
 		#address-cells = <1>;
@@ -144,7 +104,7 @@
 		/* m25p,fast-read; */
 
 		mtd@00000000 {
-			label = "flash1";
+			label = "flash0";
 			reg = <0x00000000 0x02000000>;
 		};
 	};
@@ -152,7 +112,7 @@
 
 &spi1 {
 	num-cs = <1>;
-	cs-gpios = <&porta 17 GPIO_ACTIVE_LOW>;
+	cs-gpios = <&portb 2 GPIO_ACTIVE_LOW>;
 
 	status = "okay";
 };

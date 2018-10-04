@@ -1,5 +1,21 @@
 /*
- * T-Platforms mITX board device tree.
+ * Baikal-T BFK2 board device tree.
+ *
+ * Copyright (C) 2014-2016  Baikal Electronics JSC
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
 #include <dt-bindings/interrupt-controller/mips-gic.h>
@@ -10,7 +26,7 @@
 #include "baikal_t1_soc.dtsi"
 
 / {
-	model = "T-Platforms mITX Board";
+	model = "T-Platforms BN1BT1 Board";
 	compatible = "baikal,mips", "baikal,baikal-t1-soc";
 	#address-cells = <1>;
 	#size-cells = <1>;
@@ -18,25 +34,15 @@
 
 	chosen {
 		bootargs = "root=/dev/ram rw console=ttyS0,115200n8 earlyprintk=uart8250,mmio32,0x1F04A000,115200 nohtw";
-		linux,initrd-start = <0x02000000>;
-		linux,initrd-end   = <0x03000000>;
+		linux,initrd-start = <0x01000000>;
+		linux,initrd-end   = <0x02000000>;
 	};
 
 	memory {
 		device_type = "memory";
-		reg = <0x00000000 0x07000000>,
+		reg = <0x00000000 0x08000000>,
 		      <0x20000000 0x70000000>;
 	};
-
-	leds {
-		compatible = "gpio-leds";
-		hdd {
-			label = "Disk Activity";
-			gpios = <&porta 18 GPIO_ACTIVE_HIGH>;
-			linux,default-trigger = "heartbeat";
-		};
-	};
-
 };
 
 &usb {
@@ -65,6 +71,12 @@
 
 &i2c0 {
 	status = "ok";
+	mbexpander: gpioexp@20 {
+		compatible = "nxp,pca9535";
+		reg = <0x20>;
+		gpio-controller;
+		#gpio-cells = <2>;
+	};
 };
 
 &i2c1 {
@@ -80,11 +92,6 @@
 		compatible = "atmel,24c02";
 		pagesize = <16>;
 		reg = <0x50>;
-	};
-
-	rtc@51 {
-		compatible = "nxp,pcf2129", "nxp,pcf2127";
-		reg = <0x51>;
 	};
 
 	bmc@8 {
@@ -106,13 +113,15 @@
 	cs-gpios = <&porta 14 GPIO_ACTIVE_LOW>, <0>;
 	status = "ok";
 
+#if 0
 	mmc-slot@0 {
 		compatible = "fsl,mpc8323rdb-mmc-slot", "mmc-spi-slot";
 		reg = <0>;
-//		gpios = <&porta 15 GPIO_ACTIVE_LOW>, <0>;
+		gpios = <&porta 15 GPIO_ACTIVE_LOW>, <0>;
 		voltage-ranges = <2000 3600>;
 		spi-max-frequency = <15000000>;
 	};
+#endif
 };
 
 &spi1 {
