@@ -41,6 +41,8 @@
  */
 #define IO_BASE		UNCAC_BASE
 
+#define PCI_IOBASE	_AC(0xbbd00000, UL)
+
 #include_next <spaces.h>
 
 #endif /* __ASM_BAIKAL_SPACES_H */

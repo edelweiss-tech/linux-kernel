@@ -33,7 +33,8 @@ void __iomem *pci_iomap_range(struct pci_dev *dev,
 	resource_size_t len = pci_resource_len(dev, bar);
 	unsigned long flags = pci_resource_flags(dev, bar);
 
-	if (len <= offset || !start)
+	/* Allow I/O @0 */
+	if (len <= offset || ((flags & IORESOURCE_MEM) && !start))
 		return NULL;
 	len -= offset;
 	start += offset;
