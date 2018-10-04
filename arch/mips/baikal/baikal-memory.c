@@ -21,7 +21,6 @@
 
 #include <asm/bootinfo.h>
 #include <asm/prom.h>
-#include <asm/maar.h>
 
 #include <asm/mach-baikal/hardware.h>
 #include "common.h"
@@ -144,48 +143,3 @@ int /* __init*/ baikal_find_vga_mem_init(void)
 late_initcall(baikal_find_vga_mem_init);
 #endif
 #endif /* !CONFIG_CPU_SUPPORTS_UNCACHED_ACCELERATED */
-
-/*
- * Platform-specific method of MAAR registers initialization
- */
-unsigned int platform_maar_init(unsigned int num_pairs)
-{
-	struct maar_config cfg[BOOT_MEM_MAP_MAX];
-	unsigned int i, num_configured, num_cfg = 0;
-
-	/* Collect RAM regions within MAAR config array */
-	for (i = 0; i < boot_mem_map.nr_map; i++) {
-		switch (boot_mem_map.map[i].type) {
-		case BOOT_MEM_RAM:
-		case BOOT_MEM_INIT_RAM:
-			break;
-		default:
-			continue;
-		}
-
-		/* Avoid of low memory mapping */
-		if (boot_mem_map.map[i].addr <
-		    (BAIKAL_DRAM_START + BAIKAL_DRAM_SIZE)) {
-			cfg[num_cfg].upper =
-				((ulong)virt_to_phys(_end) & ~0xffff) - 1;
-			cfg[num_cfg].lower =
-				((ulong)virt_to_phys(_text) + 0xffff) & ~0xffff;
-		} else {
-			cfg[num_cfg].upper = boot_mem_map.map[i].addr +
-						boot_mem_map.map[i].size;
-			cfg[num_cfg].upper =
-				(cfg[num_cfg].upper & ~0xffff) - 1;
-			cfg[num_cfg].lower =
-				(boot_mem_map.map[i].addr + 0xffff) & ~0xffff;
-		}
-		cfg[num_cfg].attrs = MIPS_MAAR_S;
-		num_cfg++;
-	}
-
-	num_configured = maar_config(cfg, num_cfg, num_pairs);
-	if (num_configured < num_cfg)
-		pr_warn("Not enough MAAR pairs (%u) for all bootmem regions (%u)\n",
-			num_pairs, num_cfg);
-
-	return num_configured;
-}
