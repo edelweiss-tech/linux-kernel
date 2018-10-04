@@ -74,9 +74,8 @@ int __uncached_access(struct file *file, unsigned long addr)
 	if (file->f_flags & O_DSYNC)
 		return 1;
 
-	return addr >= __pa(high_memory) ||
-		((addr >= BAIKAL_MMIO_MEM_START) &&
-		 (addr < BAIKAL_MMIO_MEM_END));
+	return ((addr >= BAIKAL_MMIO_MEM_START) &&
+		(addr < BAIKAL_MMIO_MEM_END));
 }
 
 static unsigned long uca_start, uca_end;
