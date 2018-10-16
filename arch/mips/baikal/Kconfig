@@ -152,6 +152,66 @@ config MACH_BAIKAL_MITX
 	# PCIe
 	select PCI_DRIVERS_GENERIC
 
+config MACH_BAIKAL_MSBT2
+	bool "Baikal-T MSBT2 board"
+
+	select MIPS_BAIKAL_T1
+	select BAIKAL_T_COMMON
+
+	# Errata set
+	select PAGE_SIZE_16KB
+
+	# DTB select
+	select DTB_TP_MSBT2
+
+	# PCIe
+	select PCI_DRIVERS_GENERIC
+
+config MACH_BAIKAL_RT1MB
+	bool "Baikal-T RT1MB board"
+
+	select MIPS_BAIKAL_T1
+	select BAIKAL_T_COMMON
+
+	# Errata set
+	select PAGE_SIZE_16KB
+
+	# DTB select
+	select DTB_TP_RT1MB
+
+	# PCIe
+	select PCI_DRIVERS_GENERIC
+
+config MACH_BAIKAL_MRBT1
+	bool "Baikal-T MRBT1 board"
+
+	select MIPS_BAIKAL_T1
+	select BAIKAL_T_COMMON
+
+	# Errata set
+	select PAGE_SIZE_16KB
+
+	# DTB select
+	select DTB_TP_MRBT1
+
+	# PCIe
+	select PCI_DRIVERS_GENERIC
+
+config MACH_BAIKAL_BN1BT1
+	bool "Baikal-T BN1BT1 board"
+
+	select MIPS_BAIKAL_T1
+	select BAIKAL_T_COMMON
+
+	# Errata set
+	select PAGE_SIZE_16KB
+
+	# DTB select
+	select DTB_TP_BN1BT1
+
+	# PCIe
+	select PCI_DRIVERS_GENERIC
+
 config MACH_BAIKAL_MODULE
 	bool "Baikal-T Module board"
 
@@ -287,16 +347,28 @@ config DTB_BAIKAL_MITX
 	  Device tree for T-Platforms mITX boards
 	  based on Baikal-T SOC.
 
-config DTB_BAIKAL_MSBT2
+config DTB_TP_MSBT2
 	bool "Baikal-T MSBT2 board"
 	help
 	  Device tree for T-Platforms MSBT2 boards
+	  based on Baikal-T SOC.
+
+config DTB_TP_MRBT1
+	bool "Baikal-T MRBT1 board"
+	help
+	  Device tree for T-Platforms MRBT1 boards
 	  based on Baikal-T SOC.
 
 config DTB_TP_RT1MB
 	bool "T-Platforms RT1MB board"
 	help
 	  Device tree for T-Platforms RT1MB board
+	  based on Baikal-T1 SOC.
+
+config DTB_TP_BN1BT1
+	bool "T-Platforms BN1BT1 board"
+	help
+	  Device tree for T-Platforms BN1BT1 board
 	  based on Baikal-T1 SOC.
 
 endchoice
@@ -306,7 +378,7 @@ config ARCH_NR_GPIO
 	range 32 512
 	default 40 if MACH_BAIKAL_BFK
 	default 40 if MACH_BAIKAL_BFK2
-	default 40 if MACH_BAIKAL_MITX
+	default 64 if MACH_BAIKAL_MITX || MACH_BAIKAL_MRBT1 ||MACH_BAIKAL_BN1BT1
 	default 48 if MACH_BAIKAL_MODULE
 	default 48 if MACH_BAIKAL_MSBT2
 	default 32
