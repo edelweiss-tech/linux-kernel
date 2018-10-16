@@ -1712,6 +1712,10 @@ int baikal_dma_probe(struct baikal_dma_chip *chip, struct baikal_dma_platform_da
 			edma_chan->id = i - dmac->write_chans;
 		}
 
+		/* clear status and size */
+		baikal_dma_set_ctrl(dmac, edma_chan->dirc, edma_chan->id, 0);
+		baikal_dma_set_xfer_size(dmac, edma_chan->dirc, edma_chan->id, 0);
+
 		edma_chan->mask = 0x10001 << edma_chan->id;
 		edma_chan->time = 0;
 		edma_chan->nollp = TRUE;
