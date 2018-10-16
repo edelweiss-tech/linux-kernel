@@ -27,6 +27,13 @@
 #if LINUX_VERSION_CODE > KERNEL_VERSION(3,14,0)	
 #include <drm/drm_gem.h>
 #endif
+#ifdef CONFIG_SMIFB_USE_DMA
+#include <linux/dmaengine.h>
+#endif
+
+#if defined(CONFIG_SMIFB_USE_DMA) && defined(PRIME)
+#error "SMIFB_USE_DMA and PRIME not supported together"
+#endif
 
 #define DRIVER_AUTHOR		"SiliconMotion"
 
@@ -88,7 +95,7 @@ extern int smi_indent;
 #warning "debug=2 build"
 #define dbg_msg(fmt,args...) printk(KERN_DEBUG PFX fmt, ## args)
 #define ENTER()	printk(KERN_DEBUG PFX "%*c %s\n",smi_indent++,'>',__func__)
-#define LEAVE()	\//LEAVE(...)
+#define LEAVE(...) \
 	do{				\
 	printk(KERN_DEBUG PFX "%*c %s\n",--smi_indent,'<',__func__); \
 	return __VA_ARGS__; \
@@ -162,6 +169,17 @@ struct smi_connector {
 struct smi_framebuffer {
 	struct drm_framebuffer		base;
 	struct drm_gem_object *obj;
+#ifdef CONFIG_SMIFB_USE_DMA
+	struct smi_bo *vram_bo;  // real VRAM buffer
+	int is_user;
+	bool has_dma;
+	struct task_struct *syncer_thread;
+	struct mutex mutex;
+	wait_queue_head_t wait_qh;
+	unsigned long start_off, end_off;
+	struct dma_chan *dma_chan;
+	dma_cookie_t cookie;
+#endif
 };
 
 struct smi_mc {
@@ -378,6 +396,10 @@ int smi_crtc_page_flip(struct drm_crtc *crtc,struct drm_framebuffer *fb,
 int smi_audio_init(struct pci_dev *pci);
 void smi_audio_remove(struct pci_dev *pci);
 
+#ifdef CONFIG_SMIFB_USE_DMA
+int smi_setup_dma(struct smi_framebuffer *);
+void smi_stop_dma(struct smi_framebuffer *);
+#endif
 
 /* please use revision id to distinguish sm750le and sm750*/
 #define SPC_SM750 	0

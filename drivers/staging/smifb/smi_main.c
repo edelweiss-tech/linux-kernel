@@ -10,6 +10,9 @@
 #include <drm/drmP.h>
 #include <drm/drm_crtc_helper.h>
 #include <linux/dma-buf.h>
+#ifdef CONFIG_SMIFB_USE_DMA
+#include <linux/dma/baikal.h>
+#endif
 
 #include "smi_drv.h"
 
@@ -78,6 +81,14 @@ error:
 static void smi_user_framebuffer_destroy(struct drm_framebuffer *fb)
 {
 	struct smi_framebuffer *smi_fb = to_smi_framebuffer(fb);
+
+#ifdef CONFIG_SMIFB_USE_DMA
+	if (smi_fb->vram_bo) {
+		smi_stop_dma(smi_fb);
+		smi_bo_unpin(smi_fb->vram_bo);
+		ttm_bo_del_sub_from_lru(&smi_fb->vram_bo->bo); // vvv ???
+	}
+#endif
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4,1,0)
 	if (smi_fb->obj)//After kernel v4.1, judge it in the function below. by ilena.
 #endif	
@@ -134,6 +145,56 @@ unlock:
 
 #endif
 
+#ifdef CONFIG_SMIFB_USE_DMA
+static int smi_user_framebuffer_dirty(struct drm_framebuffer *fb,
+                                        struct drm_file *file,
+                                        unsigned flags, unsigned color,
+                                        struct drm_clip_rect *clips,
+                                        unsigned num_clips)
+{
+	struct smi_framebuffer *smi_fb = to_smi_framebuffer(fb);
+	int ret = 0;
+	int i, j;
+	unsigned long offset = 0;
+	unsigned bytesPerPixel = (fb->bits_per_pixel >> 3);
+	unsigned stride = fb->pitches[0];
+	baikal_dma_chan_status status;
+	int need_wakeup;
+
+	if (!smi_fb->has_dma)
+		return -ENOSYS;
+
+	mutex_lock(&smi_fb->mutex);
+	need_wakeup = !smi_fb->end_off;
+	for (i = 0; i < num_clips; i++) {
+		int x = clips[i].x1;
+		int y = clips[i].y1;
+		int end_y = clips[i].y2 - 1;
+		int end_x = clips[i].x2 - 1;
+
+		offset = (y * stride + x * bytesPerPixel) & ~0x1fUL;
+		if (smi_fb->end_off == 0 || offset < smi_fb->start_off)
+			smi_fb->start_off = offset;
+		offset = (end_y * stride + end_x * bytesPerPixel + 0x1f) & ~0x1fUL;
+		if (offset > smi_fb->end_off)
+			smi_fb->end_off = offset;
+	}
+#if 0 /* async DMA */
+	status = dma_async_is_tx_complete(smi_fb->dma_chan,
+					  smi_fb->cookie, NULL, NULL);
+	if (status != DMA_IN_PROGRESS)
+		wake_up(&smi_fb->wait_qh);
+#else /* Baikal DMA */
+	if (need_wakeup) {
+		status = baikal_dma_chan_get_status((struct baikal_dma_chan *)smi_fb->dma_chan);
+		if (status != CHAN_RUNNING)
+			wake_up(&smi_fb->wait_qh);
+	}
+#endif
+	mutex_unlock(&smi_fb->mutex);
+	return ret;
+}
+#endif
 
 static int smi_user_framebuffer_create_handle(struct drm_framebuffer *fb,
 						  struct drm_file *file_priv,
@@ -148,7 +209,7 @@ static int smi_user_framebuffer_create_handle(struct drm_framebuffer *fb,
 static const struct drm_framebuffer_funcs smi_fb_funcs = {
 	.create_handle = smi_user_framebuffer_create_handle,
 	.destroy = smi_user_framebuffer_destroy,
-#ifdef PRIME
+#if defined(CONFIG_SMIFB_USE_DMA) || defined(PRIME)
 	.dirty = smi_user_framebuffer_dirty,
 #endif
 };
@@ -198,6 +259,9 @@ smi_user_framebuffer_create(struct drm_device *dev,
 		return ERR_PTR(-ENOMEM);
 	}
 
+#ifdef CONFIG_SMIFB_USE_DMA
+	smi_fb->is_user = 1;
+#endif
 	ret = smi_framebuffer_init(dev, smi_fb, mode_cmd, obj);
 	if (ret) {
 		drm_gem_object_unreference_unlocked(obj);
@@ -376,6 +440,10 @@ int smi_driver_load(struct drm_device *dev, unsigned long flags)
 	}
 
 	drm_vblank_init(dev, dev->mode_config.num_crtc);
+
+	r = pci_enable_msi(dev->pdev);
+	if (r)
+		dev_err(&dev->pdev->dev, "can't enable MSI irq (%d)\n", r);
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,16,0)	
 		ret = drm_irq_install(dev, dev->pdev->irq);

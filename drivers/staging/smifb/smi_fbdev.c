@@ -14,7 +14,11 @@
 #include <linux/fb.h>
 #include "smi_drv.h"
 
-
+#ifdef CONFIG_SMIFB_USE_DMA
+extern ssize_t dw_fb_write(struct fb_info *info, const char __user *buf,
+			size_t count, loff_t *ppos);
+extern int dw_fb_ioctl(struct fb_info *info, u_int cmd, u_long arg);
+#endif
 
 static int smifb_mmap(struct fb_info *info,
 			struct vm_area_struct *vma)
@@ -46,6 +50,10 @@ static struct fb_ops smifb_ops = {
 	.fb_blank = drm_fb_helper_blank,
 	.fb_setcmap = drm_fb_helper_setcmap,
 	.fb_mmap = smifb_mmap,
+#ifdef CONFIG_SMIFB_USE_DMA
+	.fb_write = dw_fb_write,
+	.fb_ioctl = dw_fb_ioctl,
+#endif
 };
 
 static int smifb_create_object(struct smi_fbdev *afbdev,
@@ -132,6 +140,7 @@ static int smifb_create(struct drm_fb_helper *helper,
 	if (ret) {
 		DRM_ERROR("failed to pin fbcon\n");
 		smi_bo_unreserve(bo);
+		smi_gem_free_object(gobj);
 		return ret;
 	}
 
@@ -281,6 +290,10 @@ static int smi_fbdev_destroy(struct drm_device *dev,
 		gfb->obj = NULL;
 	}
 
+#ifdef CONFIG_SMIFB_USE_DMA
+	if (gfb->has_dma)
+		smi_stop_dma(gfb);
+#endif
 
 	drm_fb_helper_fini(&gfbdev->helper);
 	drm_framebuffer_unregister_private(&gfb->base);
@@ -345,6 +358,7 @@ fini:
 	drm_fb_helper_fini(&gfbdev->helper);
 free:
 	kfree(gfbdev);
+	cdev->mode_info.gfbdev = NULL;
 	
 	return ret;
 

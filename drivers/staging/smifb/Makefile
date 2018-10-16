@@ -19,6 +19,10 @@ smifb-y += ddk768/uda1345.o
 smifb-y += ddk768/l3.o
 endif
 
+ifeq ($(CONFIG_SMIFB_USE_DMA),y)
+smifb-y += smi_dma.o
+endif
+
 ifeq ($(prime),1)
 EXTRA_CFLAGS += -DPRIME
 endif

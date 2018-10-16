@@ -96,6 +96,34 @@ static int smi_crtc_do_set_base(struct drm_crtc *crtc,
 #endif
 	bo = gem_to_smi_bo(smi_fb->obj);
 	dbg_msg("bo addr:0x%x\n",bo);	
+#ifdef CONFIG_SMIFB_USE_DMA
+	if (smi_fb->is_user) {
+		if (!smi_fb->vram_bo) {
+			ret = smi_bo_create(smi_fb->base.dev, bo->bo.mem.size,
+					    bo->bo.mem.page_alignment << PAGE_SHIFT,
+					    0, NULL, NULL, &smi_fb->vram_bo);
+			if (ret)
+				pr_err("smi_bo_create failed (%d)\n", ret);
+			else
+				ret = smi_setup_dma(smi_fb);
+		} else {
+			pr_err("vram_bo already exists???\n");
+		}
+		ret = smi_bo_reserve(bo, false);
+		if (ret == 0) {
+			ret = smi_bo_pin(bo, TTM_PL_FLAG_SYSTEM, NULL);
+			smi_bo_unreserve(bo);
+		} else {
+			pr_err("smi_bo_reserve failed\n");
+			LEAVE(ret);
+		}
+		if (ret) {
+			dbg_msg("smi_bo_pin system failed\n");
+			LEAVE(ret);
+		}
+		bo = smi_fb->vram_bo;
+	}
+#endif
 	ret = smi_bo_reserve(bo, false);
 	if (ret)
 	{
