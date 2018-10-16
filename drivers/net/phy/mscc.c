@@ -316,8 +316,12 @@ static int vsc8531_of_init(struct phy_device *phydev)
 	struct device *dev = &phydev->mdio.dev;
 	struct device_node *of_node = dev->of_node;
 
-	if (!of_node)
-		return -ENODEV;
+	if (!of_node) {
+		dev_info(dev, "vsc8531_of_init: of_node == NULL\n");
+		vsc8531->vddmac = MSCC_VDDMAC_1800;
+		vsc8531->edge_slowdown = 0;
+		return 0;
+	}
 
 	rc = of_property_read_u16(of_node, "vsc8531,vddmac",
 				  &vsc8531->vddmac);
