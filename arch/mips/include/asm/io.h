@@ -496,8 +496,12 @@ __BUILDIO(q, u64)
 /*
  * Some code tests for these symbols
  */
+#ifdef CONFIG_64BIT
 #define readq				readq
 #define writeq				writeq
+#else
+#include <linux/io-64-nonatomic-lo-hi.h>
+#endif
 
 #define __BUILD_MEMORY_STRING(bwlq, type)				\
 									\
