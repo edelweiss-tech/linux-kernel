@@ -1148,6 +1148,11 @@ static int atkbd_connect(struct serio *serio, struct serio_driver *drv)
 
 	switch (serio->id.type) {
 
+	case SERIO_RS232:
+		if (serio->id.proto != SERIO_PS2SER)
+			break;
+		/* Fall through */
+
 	case SERIO_8042_XL:
 		atkbd->translated = true;
 		/* Fall through */
