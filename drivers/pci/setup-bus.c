@@ -978,12 +978,15 @@ static inline resource_size_t calculate_mem_align(resource_size_t *aligns,
 	resource_size_t min_align = 0;
 	int order;
 
-	for (order = 0; order <= max_order; order++) {
+	for (order = 0; order < max_order; order++) {
 		resource_size_t align1 = 1;
+
+		if (!aligns[order])
+			continue;
 
 		align1 <<= (order + 20);
 
-		if (!align)
+		if (!min_align)
 			min_align = align1;
 		else if (ALIGN(align + min_align, min_align) < align1)
 			min_align = align1 >> 1;
@@ -1019,7 +1022,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
 			 struct list_head *realloc_head)
 {
 	struct pci_dev *dev;
-	resource_size_t min_align, align, size, size0, size1;
+	resource_size_t min_align, align, size, size0, size1, max_align;
 	resource_size_t aligns[18];	/* Alignments from 1Mb to 128Gb */
 	int order, max_order;
 	struct resource *b_res = find_free_bus_resource(bus,
@@ -1093,8 +1096,10 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
 
 	min_align = calculate_mem_align(aligns, max_order);
 	min_align = max(min_align, window_alignment(bus, b_res->flags));
-	size0 = calculate_memsize(size, min_size, 0, resource_size(b_res),
-				  window_alignment(bus, b_res->flags));
+	max_align = 1 << (max_order + 20);
+	if (min_align >= max_align/2)
+		max_align = min_align;
+	size0 = calculate_memsize(size, min_size, 0, resource_size(b_res), min_align);
 	add_align = max(min_align, add_align);
 	if (children_add_size > add_size)
 		add_size = children_add_size;
@@ -1108,8 +1113,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
 		b_res->flags = 0;
 		return 0;
 	}
-	b_res->start = min_align;
-	b_res->end = size0 + min_align - 1;
+	b_res->start = max_align;
+	b_res->end = size0 + max_align - 1;
 	b_res->flags |= IORESOURCE_STARTALIGN;
 	if (size1 > size0 && realloc_head) {
 		add_to_list(realloc_head, bus->self, b_res, size1-size0, add_align);
