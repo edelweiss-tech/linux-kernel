@@ -138,11 +138,16 @@ ssize_t dw_fb_write(struct fb_info *info, const char __user *buf,
 int dw_fb_ioctl(struct fb_info *info, u_int cmd, u_long arg)
 {
 	u32 status;
+	fb_dma_req_t dma_req;
+	struct lynxfb_par *par = info->par;
+	struct sm750_dev *sm750_dev = par->dev;
 
 	switch (cmd) {
 	case FBIO_DW_GET_STAT_DMA_TRANSFER:
 		{
 		u32 __user *argp = (u32 __user *) arg;
+		if (!sm750_dev->dma_chan)
+			return -ENXIO;
 		sm_check_dma_status(info, &status);
 		if (copy_to_user(argp, &status, sizeof(uint32_t)))
                         return -EFAULT;
@@ -151,7 +156,11 @@ int dw_fb_ioctl(struct fb_info *info, u_int cmd, u_long arg)
 	case FBIO_DW_DMA_WRITE:
 		{
 		fb_dma_req_t __user *argp = (fb_dma_req_t __user *) arg;
-		return dw_fb_write(info, argp->from, argp->size, &argp->fb_off);
+		if (!sm750_dev->dma_chan)
+			return -ENXIO;
+		if (copy_from_user(&dma_req, argp, sizeof(fb_dma_req_t)))
+			return -EFAULT;
+		return dw_fb_write(info, dma_req.from, dma_req.size, &dma_req.fb_off);
 		}
 	default:
 		return -EINVAL;

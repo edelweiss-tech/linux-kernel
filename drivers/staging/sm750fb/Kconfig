@@ -16,5 +16,5 @@ config FB_SM750
 
 config SM750_DMA
 	bool "Enable PCIe DMA for SM750"
-	depends on FB_SM750
+	depends on FB_SM750 && BAIKAL_EDMA
 
