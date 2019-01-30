@@ -8,6 +8,8 @@
 #include <linux/delay.h>
 #include <linux/kthread.h>
 #include <linux/pm.h>
+#include <linux/rtc.h>
+#include <linux/serio.h>
 
 enum I2C_REGS {
 	R_ID1 = 0,
@@ -25,6 +27,7 @@ enum I2C_REGS {
 	R_SCRATCH2,
 	R_SCRATCH3,
 	R_SCRATCH4,
+	R_CAP,
 	R_COUNT
 };
 
@@ -34,29 +37,199 @@ enum I2C_REGS {
 #define BMC_ID4_VAL0 0x32
 #define BMC_ID4_VAL1 0x2
 
+#define BMC_VERSION1	0
+#define BMC_VERSION2	2
+#define BMC_VERSION2_3	3
+
+#define BMC_CAP_PWRBTN		0x1
+#define BMC_CAP_TOUCHPAD	0x2
+#define BMC_CAP_RTC		0x4
+
+#define BMC_SERIO_BUFSIZE	7
+
 #define POLL_JIFFIES 100
 
 struct bmc_poll_data {
 	struct i2c_client *c;
 };
 
+static struct i2c_client *bmc_i2c;
+static struct i2c_client *rtc_i2c;
+static struct i2c_client *serio_i2c;
 static struct i2c_driver mitx2_bmc_i2c_driver;
 static struct input_dev *button_dev;
 static struct bmc_poll_data poll_data;
 static struct task_struct *polling_task;
+static struct task_struct *touchpad_task;
 static u8 bmc_proto_version[3];
 static u8 bmc_bootreason[2];
 static u8 bmc_scratch[4];
+static int bmc_cap;
 static const char input_name[] = "BMC input dev";
 static u8 prev_ret;
+
+/* BMC RTC */
+static int
+bmc_rtc_read_time(struct device *dev, struct rtc_time *tm)
+{
+	struct i2c_client *client = to_i2c_client(dev);
+	uint8_t rtc_buf[8];
+	struct i2c_msg msg;
+	int t;
+	int rc;
+
+	msg.addr = client->addr;
+	msg.flags = I2C_M_RD;
+	msg.len = 8;
+	msg.buf = rtc_buf;
+	rc = i2c_transfer(client->adapter, &msg, 1);
+	if (rc != 1) {
+		dev_err(dev, "rtc_read_time: i2c_transfer error %d\n", rc);
+		return rc;
+	}
+
+	tm->tm_sec = bcd2bin(rtc_buf[0] & 0x7f);
+	tm->tm_min = bcd2bin(rtc_buf[1] & 0x7f);
+	tm->tm_hour = bcd2bin(rtc_buf[2] & 0x3f);
+	if (rtc_buf[3] & (1 << 6)) /* PM */
+		tm->tm_hour += 12;
+	tm->tm_mday  = bcd2bin(rtc_buf[4] & 0x3f);
+	tm->tm_mon = bcd2bin(rtc_buf[5] & 0x1f);
+	t = rtc_buf[5] >> 5;
+	tm->tm_wday = (t == 7) ? 0 : t;
+	tm->tm_year = bcd2bin(rtc_buf[6]) + 100; /* year since 1900 */
+	tm->tm_yday = rtc_year_days(tm->tm_mday, tm->tm_mon, tm->tm_year);
+	tm->tm_isdst = 0;
+
+	return rtc_valid_tm(tm);
+}
+
+static int
+bmc_rtc_set_time(struct device *dev, struct rtc_time *tm)
+{
+	struct i2c_client *client = to_i2c_client(dev);
+	uint8_t rtc_buf[8];
+	struct i2c_msg msg;
+	int rc;
+	uint8_t seconds, minutes, hours, wday, mday, month, years;
+
+	seconds = bin2bcd(tm->tm_sec);
+	minutes = bin2bcd(tm->tm_min);
+	hours = bin2bcd(tm->tm_hour);
+	wday = tm->tm_wday ? tm->tm_wday : 0x7;
+	mday = bin2bcd(tm->tm_mday);
+	month = bin2bcd(tm->tm_mon);
+	years = bin2bcd(tm->tm_year % 100);
+
+	/* Need sanity check??? */
+	rtc_buf[0] = seconds;
+	rtc_buf[1] = minutes;
+	rtc_buf[2] = hours;
+	rtc_buf[3] = 0;
+	rtc_buf[4] = mday;
+	rtc_buf[5] = month | (wday << 5);
+	rtc_buf[6] = years;
+	rtc_buf[7] = 0;
+
+	msg.addr = client->addr;
+	msg.flags = 0;
+	msg.len = 8;
+	msg.buf = rtc_buf;
+	dev_dbg(dev, "rtc_set_time: %08x-%08x\n", *(uint32_t *)&rtc_buf[0],
+		*(uint32_t *)&rtc_buf[4]);
+	rc = i2c_transfer(client->adapter, &msg, 1);
+	if (rc != 1)
+		dev_err(dev, "i2c write: %d\n", rc);
+
+	return (rc == 1) ? 0 : -EIO;
+}
+
+static const struct rtc_class_ops
+bmc_rtc_ops = {
+	.read_time = bmc_rtc_read_time,
+	.set_time = bmc_rtc_set_time,
+};
+
+#ifdef CONFIG_SERIO
+/* BMC serio (PS/2 touchpad) interface */
+
+static int bmc_serio_write(struct serio *id, unsigned char val)
+{
+	struct i2c_client *client = id->port_data;
+	uint8_t buf[4];
+	struct i2c_msg msg;
+	int rc;
+
+	buf[0] = val;
+	msg.addr = client->addr;
+	msg.flags = 0;
+	msg.len = 1;
+	msg.buf = buf;
+	dev_dbg(&client->dev, "bmc_serio_write: %02x\n", val);
+	rc = i2c_transfer(client->adapter, &msg, 1);
+	if (rc != 1)
+		dev_err(&client->dev, "i2c write: %d\n", rc);
+
+	return (rc == 1) ? 0 : -EIO;
+}
+
+/* returns: -1 on error, +1 if more data available, 0 otherwise */
+static int bmc_serio_read(struct i2c_client *client)
+{
+	struct serio *serio = dev_get_drvdata(&client->dev);
+	int i, rc, cnt;
+	uint8_t buf[BMC_SERIO_BUFSIZE];
+	struct i2c_msg msg;
+
+	msg.addr = client->addr;
+	msg.flags = I2C_M_RD;
+	msg.len = BMC_SERIO_BUFSIZE;
+	msg.buf = buf;
+	rc = i2c_transfer(client->adapter, &msg, 1);
+	if (rc != 1) {
+		dev_err(&client->dev, "bmc_serio_read: i2c_transfer error %d\n", rc);
+		return -1;
+	}
+
+	cnt = buf[0];
+	rc = 0;
+	if (cnt > BMC_SERIO_BUFSIZE - 1) {
+		cnt = BMC_SERIO_BUFSIZE - 1;
+		rc = 1;
+	}
+
+	for (i = 0; i < cnt; i++) {
+		serio_interrupt(serio, buf[i + 1], 0);
+	}
+
+	return 0;
+}
+
+int
+touchpad_poll_fn(void *data) {
+	int ret;
+
+	while (1) {
+		if (kthread_should_stop())
+			break;
+		while ((ret = bmc_serio_read(serio_i2c)) > 0)
+			;
+		if (ret < 0) {
+			msleep_interruptible(10000);
+		}
+		msleep_interruptible(10);
+	}
+	return 0;
+}
+#endif /* CONFIG_SERIO */
 
 void
 bmc_pwroff_rq(void) {
 	int ret = 0;
 
-	dev_info(&poll_data.c->dev, "Write reg R_PWROFF_RQ\n");
-	ret = i2c_smbus_write_byte_data(poll_data.c, R_PWROFF_RQ, 0x01);
-	dev_info(&poll_data.c->dev, "ret: %i\n", ret);
+	dev_info(&bmc_i2c->dev, "Write reg R_PWROFF_RQ\n");
+	ret = i2c_smbus_write_byte_data(bmc_i2c, R_PWROFF_RQ, 0x01);
+	dev_info(&bmc_i2c->dev, "ret: %i\n", ret);
 }
 
 int
@@ -86,6 +259,7 @@ pwroff_rq_poll_fn(void *data) {
 			input_sync(button_dev);
 		}
 		prev_ret = ret;
+
 		msleep_interruptible(100);
 	}
 	do_exit(1);
@@ -166,6 +340,15 @@ mitx2_bmc_validate(struct i2c_client *client) {
 			}
 			bmc_scratch[i - R_SCRATCH1] = ret;
 		}
+		if (bmc_proto_version[2] >= BMC_VERSION2_3) {
+			ret = i2c_smbus_read_byte_data(client, R_CAP);
+			if (ret >= 0)
+				bmc_cap = ret;
+			dev_info(&client->dev,
+				 "BMC extended capabilities %x\n", bmc_cap);
+		} else {
+			bmc_cap = BMC_CAP_PWRBTN;
+		}
 	} else {
 		dev_err(&client->dev, "Bad value [0x%02x] in register 0x%02x\n",
 			ret, R_ID4);
@@ -173,6 +356,69 @@ mitx2_bmc_validate(struct i2c_client *client) {
 	}
 	dev_info(&client->dev, "BMC seems to be valid\n");
 	return 0;
+}
+
+static int
+bmc_create_client_devices(struct device *bmc_dev)
+{
+	int ret = 0;
+	struct rtc_device *rtc_dev;
+	struct i2c_client *client = to_i2c_client(bmc_dev);
+	int client_addr = client->addr + 1;
+
+	if (bmc_cap & BMC_CAP_TOUCHPAD) {
+#ifdef CONFIG_SERIO
+		struct serio *serio;
+		serio_i2c = i2c_new_secondary_device(client,
+						     "bmc_serio", client_addr);
+		if (!serio_i2c) {
+			dev_err(&client->dev, "Can't get serio secondary\n");
+			ret = -ENOMEM;
+			goto fail;
+		}
+		serio = devm_kzalloc(&serio_i2c->dev, sizeof(struct serio), GFP_KERNEL);
+		if (!serio) {
+			dev_err(&serio_i2c->dev, "Can't allocate serio\n");
+			ret = -ENOMEM;
+			i2c_unregister_device(serio_i2c);
+			serio_i2c = NULL;
+			goto skip_tp;
+		}
+		serio->write = bmc_serio_write;
+		serio->port_data = serio_i2c;
+		serio->id.type = SERIO_PS_PSTHRU;
+		serio_register_port(serio);
+		dev_set_drvdata(&serio_i2c->dev, serio);
+		touchpad_task = kthread_run(touchpad_poll_fn, NULL, "BMC serio poll task");
+#endif
+
+skip_tp:
+		client_addr++;
+	}
+
+	if (bmc_cap & BMC_CAP_RTC) {
+		rtc_i2c = i2c_new_secondary_device(client,
+						   "bmc_rtc", client_addr);
+		if (!rtc_i2c) {
+			dev_err(&client->dev, "Can't get RTC secondary\n");
+			ret = -ENOMEM;
+			goto fail;
+		}
+
+		rtc_dev = devm_rtc_device_register(&rtc_i2c->dev, "bmc_rtc",
+						   &bmc_rtc_ops, THIS_MODULE);
+		if (IS_ERR(rtc_dev)) {
+			ret = PTR_ERR(rtc_dev);
+			dev_err(&client->dev, "Failed to register RTC device: %d\n",
+				ret);
+			i2c_unregister_device(rtc_i2c);
+			rtc_i2c = NULL;
+		}
+fail:
+		client_addr++;
+	}
+
+	return ret;
 }
 
 static int
@@ -196,31 +442,36 @@ mitx2_bmc_i2c_probe(struct i2c_client *client,
 	if (err)
 		return err;
 
-	button_dev = input_allocate_device();
-	if (!button_dev) {
-		dev_err(&client->dev, "Not enough memory\n");
-		return -ENOMEM;
+	if (bmc_cap & BMC_CAP_PWRBTN) {
+		button_dev = input_allocate_device();
+		if (!button_dev) {
+			dev_err(&client->dev, "Not enough memory\n");
+			return -ENOMEM;
+		}
+
+		button_dev->id.bustype = BUS_I2C;
+		button_dev->dev.parent = &client->dev;
+		button_dev->name = input_name;
+		button_dev->phys = "bmc-input0";
+		button_dev->evbit[0] = BIT_MASK(EV_KEY);
+		button_dev->keybit[BIT_WORD(KEY_POWER)] = BIT_MASK(KEY_POWER);
+
+		err = input_register_device(button_dev);
+		if (err) {
+			dev_err(&client->dev, "Failed to register device\n");
+			input_free_device(button_dev);
+			return err;
+		}
+
+		dev_info(&client->dev, "Starting polling thread\n");
+		poll_data.c = client;
+		polling_task = kthread_run(pwroff_rq_poll_fn, NULL, "BMC poll task");
 	}
 
-	button_dev->id.bustype = BUS_I2C;
-	button_dev->dev.parent = &client->dev;
-	button_dev->name = input_name;
-	button_dev->phys = "bmc-input0";
-	button_dev->evbit[0] = BIT_MASK(EV_KEY);
-	button_dev->keybit[BIT_WORD(KEY_POWER)] = BIT_MASK(KEY_POWER);
+	if (bmc_cap)
+		err = bmc_create_client_devices(&client->dev);
 
-	err = input_register_device(button_dev);
-	if (err) {
-		dev_err(&client->dev, "Failed to register device\n");
-		input_free_device(button_dev);
-		return err;
-	}
-
-	dev_info(&client->dev, "Starting polling thread\n");
-	polling_task = kthread_run(pwroff_rq_poll_fn, NULL, "BMC poll task");
-
-	poll_data.c = client;
-
+	bmc_i2c = client;
 	/* register as poweroff handler */
 	pm_power_off = bmc_pwroff_rq;
 
@@ -230,8 +481,24 @@ mitx2_bmc_i2c_probe(struct i2c_client *client,
 static int
 mitx2_bmc_i2c_remove(struct i2c_client *client)
 {
-	kthread_stop(polling_task);
-	input_unregister_device(button_dev);
+#ifdef CONFIG_SERIO
+	struct serio *serio;
+#endif
+
+	if (button_dev) {
+		kthread_stop(polling_task);
+		input_unregister_device(button_dev);
+	}
+#ifdef CONFIG_SERIO
+	if (serio_i2c) {
+		kthread_stop(touchpad_task);
+		serio = dev_get_drvdata(&serio_i2c->dev);
+		serio_unregister_port(serio);
+		i2c_unregister_device(serio_i2c);
+	}
+#endif
+	if (rtc_i2c)
+		i2c_unregister_device(rtc_i2c);
 	return 0;
 }
 
