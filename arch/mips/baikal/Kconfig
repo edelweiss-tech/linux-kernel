@@ -388,6 +388,21 @@ config ARCH_NR_GPIO
 
 	  If unsure, leave the default value.
 
+if PCI_DRIVERS_GENERIC
+config DW_PCIE_HOST_INIT
+	bool "Init PCIe host controller"
+	default y
+	help
+	  If you answer N then PCIe host controller hardware initialization
+	  will be dropped from kernel code. This may be required in case
+	  of timing limitations between reset of PCI devices and host.
+	  In such a case timing requirements may be better satisfied in
+	  u-boot.
+
+	  Answer N only if you are sure that PCI is properly initialized by u-boot.
+
+endif
+
 menuconfig BAIKAL_ERRATA
 	bool "Baikal SoC Errata Fix"
 	help

@@ -40,13 +40,11 @@ static void __init plat_setup_iocoherency(void)
 
 static int __init baikal_platform_setup(void)
 {
-#ifdef CONFIG_PCI
 	/* PCI init */
-#ifdef CONFIG_PCIE_DW_PLAT
+#ifdef CONFIG_DW_PCIE_HOST_INIT
 	dw_pcie_init();
-#else
+#elif defined(CONFIG_PCI_DRIVERS_LEGACY)
 	mips_pcibios_init();
-#endif
 #endif
 	/* Setup IO Coherency */
 	plat_setup_iocoherency();
