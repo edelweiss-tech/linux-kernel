@@ -71,12 +71,8 @@
 
 &i2c0 {
 	status = "ok";
-	mbexpander: gpioexp@20 {
-		compatible = "nxp,pca9535";
-		reg = <0x20>;
-		gpio-controller;
-		#gpio-cells = <2>;
-	};
+
+	clock-frequency = <100000>;
 };
 
 &i2c1 {
@@ -96,12 +92,19 @@
 
 	bmc@8 {
 		compatible = "tp,mitx2-bmc", "t-platforms,mitx2-bmc";
-		reg = <0x08>;
+		reg = <0x0c>;
 	};
 
-	shred: gpio@21 {
+	mbexpander: gpioexp@20 {
+		compatible = "nxp,pca9535";
+		reg = <0x20>;
+		gpio-controller;
+		#gpio-cells = <2>;
+	};
+
+	shred: gpio@24 {
 		compatible = "nxp,pcf8574";
-		reg = <0x21>;
+		reg = <0x24>;
 		gpio-controller;
 		#gpio-cells = <2>;
 		lines-initial-states = <0x0>;
@@ -133,3 +136,13 @@
 &pvt {
 	status = "ok";
 };
+
+&uart1 {
+	status = "ok";
+
+	dcd-override;
+	dsr-override;
+	cts-override;
+	ri-override;
+};
+
