@@ -14,7 +14,7 @@
 		#address-cells = <1>;
 		#size-cells = <1>;
 
-		ranges;
+		ranges = <0x1F04D000 0 0x1F04D000 0x100>;
 
 		/* external oscillator */
 		osc: oscillator@0 {

@@ -20,19 +20,17 @@
 / {
 	model = "Baikal-T1 BFK2 evaluation board";
 	compatible = "baikal,mips", "baikal,baikal-t1-soc", "baikal,baikal-bfk2-eval-board";
-	#address-cells = <1>;
-	#size-cells = <1>;
 
 	chosen {
 		bootargs = "root=/dev/ram rw rootwait console=ttyS0,115200n8 earlyprintk=uart8250,mmio32,0x1F04A000,115200 maxcpus=2 nohtw";
-		linux,initrd-start = <0x01000000>;
-		linux,initrd-end   = <0x02000000>;
+		linux,initrd-start = <0 0x01000000>;
+		linux,initrd-end   = <0 0x02000000>;
 	};
 
 	memory {
 		device_type = "memory";
-		reg = <0x00000000 0x08000000>,
-		      <0x20000000 0xC0000000>;
+		reg = <0 0x00000000 0 0x08000000>,
+		      <0 0x20000000 0 0xC0000000>;
 	};
 };
 
