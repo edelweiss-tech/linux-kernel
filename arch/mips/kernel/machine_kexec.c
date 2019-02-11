@@ -100,6 +100,9 @@ machine_kexec(struct kimage *image)
 	printk("Bye ...\n");
 	__flush_cache_all();
 
+	/* Mark offline BEFORE disabling local irq. */
+	set_cpu_online(smp_processor_id(), false);
+
 	/*
 	 * we do not want to be bothered.
 	 */
