@@ -694,6 +694,7 @@
 #define MIPS_MAAR_ADDR_SHIFT	12
 #define MIPS_MAAR_S		(_ULCAST_(1) << 1)
 #define MIPS_MAAR_V		(_ULCAST_(1) << 0)
+#define MIPS_MAARVH_VH		(_ULCAST_(1) << 31)
 
 /* EBase bit definitions */
 #define MIPS_EBASE_CPUNUM_SHIFT	0
@@ -1366,6 +1367,20 @@ do {									\
 	: "r" (value), "i" (register));					\
 } while (0)
 
+#define __writex_32bit_c0_register_sel(register, sel, value)			\
+do {									\
+	__asm__ __volatile__(						\
+	"	.set	push					\n"	\
+	"	.set	noat					\n"	\
+	"	.set	mips32r2				\n"	\
+	"	move	$1, %0					\n"	\
+	"	# mthc0 $1, %1					\n"	\
+	_ASM_INSN_IF_MIPS(0x40c10000 | ((%1 & 0x1f) << 11) | (%2 & 3))  \
+	"	.set	pop					\n"	\
+	:								\
+	: "r" (value), "i" (register), "i" (sel));					\
+} while (0)
+
 #define read_c0_index()		__read_32bit_c0_register($0, 0)
 #define write_c0_index(val)	__write_32bit_c0_register($0, 0, val)
 
@@ -1493,6 +1508,7 @@ do {									\
 #define write_c0_lladdr(val)	__write_ulong_c0_register($17, 0, val)
 #define read_c0_maar()		__read_ulong_c0_register($17, 1)
 #define write_c0_maar(val)	__write_ulong_c0_register($17, 1, val)
+#define writex_c0_maar(val)	__writex_32bit_c0_register_sel(17, 1, val)
 #define read_c0_maari()		__read_32bit_c0_register($17, 2)
 #define write_c0_maari(val)	__write_32bit_c0_register($17, 2, val)
 
