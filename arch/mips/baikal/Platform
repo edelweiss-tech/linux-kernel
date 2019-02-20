@@ -19,8 +19,10 @@ cflags-$(CONFIG_MIPS_BAIKAL)	+= -I$(srctree)/arch/mips/include/asm/mach-baikal
 cflags-$(CONFIG_CPU_MIPS32_R5)	+= -mfp64 -Wa,-mmsa -mips32r5 -mtune=p5600
 ifdef CONFIG_KVM_GUEST
     load-$(CONFIG_MIPS_BAIKAL)	+= 0x0000000040100000
+    zload-$(CONFIG_MIPS_BAIKAL)	+= 0x0000000046100000
 else
     load-$(CONFIG_MIPS_BAIKAL)	+= 0xffffffff80100000
+    zload-$(CONFIG_MIPS_BAIKAL)	+= 0xffffffff86100000
 endif
 all-$(CONFIG_MIPS_BAIKAL)	:= $(COMPRESSION_FNAME).bin
 
