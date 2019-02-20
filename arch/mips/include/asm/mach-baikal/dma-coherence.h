@@ -9,6 +9,10 @@
 #ifndef __ASM_MACH_BAIKAL_DMA_COHERENCE_H
 #define __ASM_MACH_BAIKAL_DMA_COHERENCE_H
 
+#ifdef CONFIG_PCI
+extern struct bus_type pci_bus_type;
+#endif
+
 struct device;
 
 static inline dma_addr_t plat_map_dma_mem(struct device *dev, void *addr,
@@ -41,6 +45,10 @@ static inline int plat_dma_supported(struct device *dev, u64 mask)
 	 * so we can't guarantee allocations that must be
 	 * within a tighter range than GFP_DMA..
 	 */
+#ifdef CONFIG_PCI
+	if (dev->bus == &pci_bus_type)
+		return 1;	/* assume PCI device can access > 4GB */
+#endif
 	if (mask < DMA_BIT_MASK(24) || mask > DMA_BIT_MASK(32))
 		return 0;
 
