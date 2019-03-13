@@ -372,6 +372,8 @@ static int dw_spi_transfer_one(struct spi_master *master,
 	}
 
 	spi_enable_chip(dws, 1);
+	/* We have to set controller chipselect to start transfer */
+	dw_writel(dws, DW_SPI_SER, BIT(spi->chip_select));
 
 	if (dws->dma_mapped) {
 		ret = dws->dma_ops->dma_transfer(dws, transfer);
