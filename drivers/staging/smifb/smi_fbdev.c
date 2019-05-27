@@ -18,6 +18,54 @@
 extern ssize_t dw_fb_write(struct fb_info *info, const char __user *buf,
 			size_t count, loff_t *ppos);
 extern int dw_fb_ioctl(struct fb_info *info, u_int cmd, u_long arg);
+#define SHADOWFB_OFF	0x10000000	/* 256MB - above VRAM size */
+#define SHADOW_PGOFF	(SHADOWFB_OFF >> PAGE_SHIFT)
+#endif
+
+#ifdef CONFIG_SMIFB_USE_DMA
+static int smifb_alloc_shadow_pages(struct smi_framebuffer *gfb, unsigned npages)
+{
+	int order, i;
+	struct page *page;
+	unsigned allocated;
+
+	pr_debug("alloc shadow %d pages\n", npages);
+	order = get_order(npages << PAGE_SHIFT);
+	page = alloc_pages(GFP_HIGHUSER, order);
+	if (!page) {
+		pr_err("smifb_alloc_shadow_pages: no memory!\n");
+		return -ENOMEM;
+	}
+	allocated = 1 << order;
+	gfb->shadow_npages = allocated;
+	gfb->shadow_start = page_to_phys(page);
+	gfb->shadow_start_page = page++;
+	/* page_count for page[0] is OK */
+	for (i = 1; i < allocated; i++) {
+		init_page_count(page++);
+	}
+	pr_debug("got %d pages at %x\n", allocated, gfb->shadow_start);
+
+	return 0;
+}
+
+static void smifb_free_shadow_pages(struct smi_framebuffer *gfb)
+{
+	struct page *page;
+	int i;
+
+	pr_debug("free pages at %x\n", gfb->shadow_start);
+	page = gfb->shadow_start_page;
+	page++;
+	for (i = 1; i < gfb->shadow_npages; i++) {
+		put_page_testzero(page);
+		page++;
+	}
+	__free_pages(gfb->shadow_start_page, get_order(gfb->shadow_npages << PAGE_SHIFT));
+	gfb->shadow_start_page = NULL;
+	gfb->shadow_start = 0;
+	gfb->shadow_npages = 0;
+}
 #endif
 
 static int smifb_mmap(struct fb_info *info,
@@ -26,6 +74,30 @@ static int smifb_mmap(struct fb_info *info,
 	struct smi_fbdev *afbdev = info->par;
 	struct drm_gem_object *obj;
 	struct smi_bo *bo;
+	int ret;
+
+#ifdef CONFIG_SMIFB_USE_DMA
+	if (vma->vm_pgoff >= SHADOW_PGOFF) {
+		phys_addr_t shadow_start = afbdev->gfb.shadow_start;
+		unsigned long size;
+		pr_debug("smifb_mmap: pg_off %x, start %x (caller %s)\n",
+			 vma->vm_pgoff, vma->vm_start, current->comm);
+		vma->vm_pgoff -= SHADOW_PGOFF;
+		vma->vm_page_prot = PAGE_USERIO;
+		size = (vma->vm_pgoff + vma_pages(vma)) << PAGE_SHIFT;
+		if (!shadow_start) {
+			ret = smifb_alloc_shadow_pages(&afbdev->gfb, size >> PAGE_SHIFT);
+			if (ret)
+				return ret;
+			shadow_start = afbdev->gfb.shadow_start;
+		} else if ((size >> PAGE_SHIFT) > afbdev->gfb.shadow_npages) {
+			return -EINVAL;
+		}
+		pr_debug("smifb_mmap: shadow_start - %08x\n", shadow_start);
+
+		return vm_iomap_memory(vma, shadow_start, vma->vm_end - vma->vm_start);
+	}
+#endif
 	obj = afbdev->gfb.obj;
 	bo = gem_to_smi_bo(obj);	
 
@@ -293,6 +365,8 @@ static int smi_fbdev_destroy(struct drm_device *dev,
 #ifdef CONFIG_SMIFB_USE_DMA
 	if (gfb->has_dma)
 		smi_stop_dma(gfb);
+	if (gfb->shadow_start)
+		smifb_free_shadow_pages(gfb);
 #endif
 
 	drm_fb_helper_fini(&gfbdev->helper);
