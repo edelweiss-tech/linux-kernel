@@ -179,6 +179,10 @@ struct smi_framebuffer {
 	unsigned long start_off, end_off;
 	struct dma_chan *dma_chan;
 	dma_cookie_t cookie;
+//	struct smi_bo *shadow_bo;
+	phys_addr_t shadow_start;
+	struct page *shadow_start_page;
+	int shadow_npages;
 #endif
 };
 
