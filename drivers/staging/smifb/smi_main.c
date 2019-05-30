@@ -86,7 +86,7 @@ static void smi_user_framebuffer_destroy(struct drm_framebuffer *fb)
 	if (smi_fb->vram_bo) {
 		smi_stop_dma(smi_fb);
 		smi_bo_unpin(smi_fb->vram_bo);
-		ttm_bo_del_sub_from_lru(&smi_fb->vram_bo->bo); // vvv ???
+		smi_bo_unref(&smi_fb->vram_bo);
 	}
 #endif
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4,1,0)

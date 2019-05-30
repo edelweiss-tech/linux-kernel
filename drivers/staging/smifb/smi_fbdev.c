@@ -303,6 +303,8 @@ static int smifb_create(struct drm_fb_helper *helper,
 
 	smi_fb_zfill(dev, gfbdev);
 
+	smi_bo_unpin(bo);
+
 	DRM_INFO("fb mappable at 0x%lX\n", info->fix.smem_start);
 	DRM_INFO("vram aper at 0x%lX\n", (unsigned long)info->fix.smem_start);
 	DRM_INFO("size %lu\n", (unsigned long)info->fix.smem_len);

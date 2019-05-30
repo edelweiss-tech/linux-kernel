@@ -179,7 +179,6 @@ struct smi_framebuffer {
 	unsigned long start_off, end_off;
 	struct dma_chan *dma_chan;
 	dma_cookie_t cookie;
-//	struct smi_bo *shadow_bo;
 	phys_addr_t shadow_start;
 	struct page *shadow_start_page;
 	int shadow_npages;
@@ -278,6 +277,7 @@ int smi_device_init(struct smi_device *cdev,
 		      uint32_t flags);
 void smi_device_fini(struct smi_device *cdev);
 int smi_gem_init_object(struct drm_gem_object *obj);
+void smi_bo_unref(struct smi_bo **bo);
 void smi_gem_free_object(struct drm_gem_object *obj);
 int smi_dumb_mmap_offset(struct drm_file *file,
 			    struct drm_device *dev,

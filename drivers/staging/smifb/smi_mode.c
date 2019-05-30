@@ -87,6 +87,18 @@ static int smi_crtc_do_set_base(struct drm_crtc *crtc,
 			smi_bo_unpin(bo);
 			smi_bo_unreserve(bo);
 		}
+#ifdef CONFIG_SMIFB_USE_DMA
+		if (smi_fb->vram_bo) {
+			bo = smi_fb->vram_bo;
+			ret = smi_bo_reserve(bo, false);
+			if (ret) {
+				DRM_ERROR("failed to reserve vram_bo\n");
+			} else {
+				smi_bo_unpin(bo);
+				smi_bo_unreserve(bo);
+			}
+		}
+#endif
 	}
 
 #if LINUX_VERSION_CODE > KERNEL_VERSION(3,14,0)	
@@ -106,8 +118,8 @@ static int smi_crtc_do_set_base(struct drm_crtc *crtc,
 				pr_err("smi_bo_create failed (%d)\n", ret);
 			else
 				ret = smi_setup_dma(smi_fb);
-		} else {
-			pr_err("vram_bo already exists???\n");
+		} else if (smi_fb->vram_bo->bo.mem.size != bo->bo.mem.size) {
+			pr_err("vram_bo already exists, but is of different size\n");
 		}
 		ret = smi_bo_reserve(bo, false);
 		if (ret == 0) {
