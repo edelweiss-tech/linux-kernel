@@ -86,6 +86,7 @@ static void smi_dma_start_xfer(struct smi_framebuffer *smi_fb)
 	smi_fb->start_off = smi_fb->end_off = 0;
 	mutex_unlock(&smi_fb->mutex); // unlock early to allow user side updating start_off/end_off
 
+	smi_bo_reserve(src_bo, false);
 	ret = ttm_bo_kmap(&src_bo->bo, start_page, num_pages, &src_bo->kmap);
 	if (ret) {
 		smfb_err(smi_fb, "ttm_bo_kmap %lx:%lx error %d\n", start_page, num_pages, ret);
@@ -95,6 +96,7 @@ static void smi_dma_start_xfer(struct smi_framebuffer *smi_fb)
 
 	dma_cache_sync(NULL, kmap_va + start_off, size, DMA_TO_DEVICE);
 	ttm_bo_kunmap(&src_bo->kmap);
+	smi_bo_unreserve(src_bo);
 
 #if 0 /* async DMA API */
 	tx = dev->device_prep_dma_memcpy(chan, dst, src, size, 0);
