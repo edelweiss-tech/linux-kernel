@@ -302,11 +302,12 @@ ssize_t dw_fb_write(struct fb_info *info, const char __user *buf,
 	unsigned long pfn;
 	phys_addr_t pbuf;
 	unsigned long total_size;
-	unsigned long dma_size;
-	u16 lead = 0, tail = 0;
 
 	if (info->state != FBINFO_STATE_RUNNING)
 		return -EPERM;
+
+	if (((unsigned long)buf & 3) || (p & 3) || (count & 3))
+		return -EINVAL; /* must be word-aligned */
 
 	total_size = info->screen_size;
 
@@ -334,21 +335,6 @@ ssize_t dw_fb_write(struct fb_info *info, const char __user *buf,
 
 	dma_cache_wback_inv((uint32_t)buf, count);
 
-	/* Odd address = can't DMA. Align */
-	if (dst & 3) {
-		lead = 4 - (dst & 3);
-		if (copy_from_user((char *)dst, buf, lead))
-			return -EFAULT;
-		buf += lead;
-		dst += lead;
-	}
-	/* DMA resolution is 32 bits */
-	if ((count - lead) & 3)
-		tail = (count - lead) & 3;
-
-	/* DMA the data */
-	dma_size = count - lead - tail;
-
 	/* Get physical address based on an user-virtual address. */
 	if (get_pfn((unsigned long)buf, VM_WRITE, &pfn) == 0) {
 		pbuf = (pfn << PAGE_SHIFT) | (((uint32_t)buf) & ~PAGE_MASK);
@@ -357,9 +343,10 @@ ssize_t dw_fb_write(struct fb_info *info, const char __user *buf,
 		return -EFAULT;
 	}
 
-	err = sm_dma_start(info, pbuf /* MEM */, dst /* PCI */, dma_size /*size*/);
+	err = sm_dma_start(info, pbuf /* MEM */, dst /* PCI */, count /*size*/);
 
 	if  (!err)
 		*ppos += count;
+
 	return (err) ? err : count;
 }
