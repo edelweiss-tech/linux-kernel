@@ -337,7 +337,7 @@ ssize_t dw_fb_write(struct fb_info *info, const char __user *buf,
 
 	/* Get physical address based on an user-virtual address. */
 	if (get_pfn((unsigned long)buf, VM_WRITE, &pfn) == 0) {
-		pbuf = (pfn << PAGE_SHIFT) | (((uint32_t)buf) & ~PAGE_MASK);
+		pbuf = PFN_PHYS(pfn) | (((uint32_t)buf) & ~PAGE_MASK);
 	} else {
 		pr_err("%s: cannot get pfn\n", __FUNCTION__);
 		return -EFAULT;
