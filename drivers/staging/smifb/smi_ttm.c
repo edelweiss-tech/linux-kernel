@@ -6,7 +6,7 @@
  * directory of this archive for more details.
  *
  */
- 
+
 #include <drm/drmP.h>
 #include "smi_drv.h"
 #include <ttm/ttm_page_alloc.h>
@@ -72,7 +72,6 @@ smi_ttm_global_release(struct smi_device *smi)
 	drm_global_item_unref(&smi->ttm.mem_global_ref);
 	smi->ttm.mem_global_ref.release = NULL;
 }
-
 
 void smi_bo_ttm_destroy(struct ttm_buffer_object *tbo)
 {
@@ -198,7 +197,6 @@ static struct ttm_backend_func smi_tt_backend_func = {
 	.destroy = &smi_ttm_backend_destroy,
 };
 
-
 struct ttm_tt *smi_ttm_tt_create(struct ttm_bo_device *bdev,
 				 unsigned long size, uint32_t page_flags,
 				 struct page *dummy_read_page)
@@ -261,7 +259,7 @@ static int smi_ttm_tt_populate(struct ttm_tt *ttm)
 	bool slave = !!(ttm->page_flags & TTM_PAGE_FLAG_SG);
 
 	if (ttm->state != tt_unpopulated)
- 		return 0;
+		return 0;
 
 	if (slave && ttm->sg) {
 		drm_prime_sg_to_page_addr_arrays(ttm->sg, ttm->pages,
@@ -269,9 +267,9 @@ static int smi_ttm_tt_populate(struct ttm_tt *ttm)
 		ttm->state = tt_unbound;
 		return 0;
 	}
-	
+
 #ifdef CONFIG_SMIFB_USE_DMA
-	if (ttm->num_pages > 1 )
+	if (ttm->num_pages > 1)
 		return smi_ttm_alloc_contig(ttm);
 #endif
 
@@ -328,48 +326,48 @@ int smi_mm_init(struct smi_device *smi)
 
 	ret = ttm_bo_device_init(&smi->ttm.bdev,
 				 smi->ttm.bo_global_ref.ref.object,
-#if LINUX_VERSION_CODE > KERNEL_VERSION(3,14,0)					 
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,14,0)
 				 &smi_bo_driver, dev->anon_inode->i_mapping,
-				 DRM_FILE_PAGE_OFFSET,smi->need_dma32);
+				 DRM_FILE_PAGE_OFFSET, smi->need_dma32);
 #else
 				 &smi_bo_driver, DRM_FILE_PAGE_OFFSET,
 				 smi->need_dma32);
-#endif				 
+#endif
 	if (ret) {
 		DRM_ERROR("Error initialising bo driver; %d\n", ret);
 		return ret;
 	}
- 	ret = ttm_bo_init_mm(bdev, TTM_PL_VRAM,
+	ret = ttm_bo_init_mm(bdev, TTM_PL_VRAM,
 			     smi->mc.vram_size >> PAGE_SHIFT);
 	if (ret) {
 		DRM_ERROR("Failed ttm VRAM init: %d\n", ret);
 		return ret;
 	}
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,9,0)	
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,9,0)
 	arch_io_reserve_memtype_wc(pci_resource_start(dev->pdev, 0),
 				   pci_resource_len(dev->pdev, 0));
-#endif	
- 	smi->fb_mtrr = arch_phys_wc_add(pci_resource_start(dev->pdev, 0),
+#endif
+	smi->fb_mtrr = arch_phys_wc_add(pci_resource_start(dev->pdev, 0),
 					   pci_resource_len(dev->pdev, 0));
- 	smi->mm_inited = true;
+	smi->mm_inited = true;
 	return 0;
 }
 
 void smi_mm_fini(struct smi_device *smi)
 {
 	struct drm_device *dev = smi->dev;
-	
+
 	if (!smi->mm_inited)
 		return;
- 	ttm_bo_device_release(&smi->ttm.bdev);
- 	smi_ttm_global_release(smi);
+	ttm_bo_device_release(&smi->ttm.bdev);
+	smi_ttm_global_release(smi);
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,9,0)	
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,9,0)
 	arch_io_free_memtype_wc(pci_resource_start(dev->pdev, 0),
 				pci_resource_len(dev->pdev, 0));
-#endif	
- 	arch_phys_wc_del(smi->fb_mtrr);
+#endif
+	arch_phys_wc_del(smi->fb_mtrr);
 	smi->fb_mtrr = 0;
 }
 
@@ -389,10 +387,10 @@ void smi_ttm_placement(struct smi_bo *bo, int domain)
 	bo->placement.num_placement = c;
 	bo->placement.num_busy_placement = c;
 	for (i = 0; i < c; ++i) {
-        bo->placements[i].fpfn = 0;
-        bo->placements[i].lpfn = 0;
+		bo->placements[i].fpfn = 0;
+		bo->placements[i].lpfn = 0;
 	}
-#else	
+#else
 	bo->placement.fpfn = 0;
 	bo->placement.lpfn = 0;
 	bo->placement.placement = bo->placements;
@@ -405,7 +403,7 @@ void smi_ttm_placement(struct smi_bo *bo, int domain)
 		bo->placements[c++] = TTM_PL_MASK_CACHING | TTM_PL_FLAG_SYSTEM;
 	bo->placement.num_placement = c;
 	bo->placement.num_busy_placement = c;
-#endif	
+#endif
 }
 
 int smi_bo_create(struct drm_device *dev, int size, int align,
@@ -425,7 +423,6 @@ int smi_bo_create(struct drm_device *dev, int size, int align,
 		type = ttm_bo_type_device;
 	}
 
-
 	smibo = kzalloc(sizeof(struct smi_bo), GFP_KERNEL);
 	if (!smibo)
 		return -ENOMEM;
@@ -433,10 +430,9 @@ int smi_bo_create(struct drm_device *dev, int size, int align,
 	ret = drm_gem_object_init(dev, &smibo->gem, size);
 	if (ret)
 		goto error;
-	
 
 	smibo->bo.bdev = &smi->ttm.bdev;
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(3,14,0)	
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(3,14,0)
 	smibo->bo.bdev->dev_mapping = dev->dev_mapping;
 #endif
 	smi_ttm_placement(smibo, TTM_PL_FLAG_VRAM | TTM_PL_FLAG_SYSTEM);
@@ -446,17 +442,16 @@ int smi_bo_create(struct drm_device *dev, int size, int align,
 
 	ret = ttm_bo_init(&smi->ttm.bdev, &smibo->bo, size,
 			  type, &smibo->placement,
-			  align >> PAGE_SHIFT, false, NULL, acc_size,sg, 
-#if LINUX_VERSION_CODE > KERNEL_VERSION(3,14,0)	
+			  align >> PAGE_SHIFT, false, NULL, acc_size, sg,
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,14,0)
 			  resv,
-#endif			   
+#endif
 			  smi_bo_ttm_destroy);
 	if (ret)
 		goto error;
-	
 
 	*psmibo = smibo;
-	 return 0;
+	return 0;
 
 error:
 	kfree(smibo);
@@ -476,18 +471,21 @@ int smi_bo_pin(struct smi_bo *bo, u32 pl_flag, u64 *gpu_addr)
 		bo->pin_count++;
 		if (gpu_addr)
 			*gpu_addr = smi_bo_gpu_offset(bo);
+		return 0;
 	}
 
 	smi_ttm_placement(bo, pl_flag);
 	for (i = 0; i < bo->placement.num_placement; i++)
-#if KERNEL_VERSION(3, 17, 0) <= LINUX_VERSION_CODE	
+#if KERNEL_VERSION(3, 17, 0) <= LINUX_VERSION_CODE
 		bo->placements[i].flags |= TTM_PL_FLAG_NO_EVICT;
 #else
 		bo->placements[i] |= TTM_PL_FLAG_NO_EVICT;
-#endif		
+#endif
 	ret = ttm_bo_validate(&bo->bo, &bo->placement, false, false);
-	if (ret)
+	if (ret) {
+		pr_err("smi_bo_pin: can't validate bo (%d)\n", ret);
 		return ret;
+	}
 
 	bo->pin_count = 1;
 	ttm_mem_io_reserve(bo->bo.bdev, &bo->bo.mem);
@@ -499,6 +497,7 @@ int smi_bo_pin(struct smi_bo *bo, u32 pl_flag, u64 *gpu_addr)
 int smi_bo_unpin(struct smi_bo *bo)
 {
 	int i, ret;
+
 	if (!bo->pin_count) {
 		dbg_msg("unpin bad %p\n", bo);
 		return 0;
@@ -508,11 +507,11 @@ int smi_bo_unpin(struct smi_bo *bo)
 		return 0;
 
 	for (i = 0; i < bo->placement.num_placement ; i++)
-#if KERNEL_VERSION(3, 17, 0) <= LINUX_VERSION_CODE	
+#if KERNEL_VERSION(3, 17, 0) <= LINUX_VERSION_CODE
 		bo->placements[i].flags &= ~TTM_PL_FLAG_NO_EVICT;
 #else
 		bo->placements[i] &= ~TTM_PL_FLAG_NO_EVICT;
-#endif		
+#endif
 	ttm_mem_io_free(bo->bo.bdev, &bo->bo.mem);
 	ret = ttm_bo_validate(&bo->bo, &bo->placement, false, false);
 	if (ret)
@@ -521,18 +520,17 @@ int smi_bo_unpin(struct smi_bo *bo)
 	return 0;
 }
 
-
 int smi_mmap(struct file *filp, struct vm_area_struct *vma)
 {
 	struct drm_file *file_priv;
 	struct smi_device *smi;
 
 	if (unlikely(vma->vm_pgoff < DRM_FILE_PAGE_OFFSET))
-#if LINUX_VERSION_CODE > KERNEL_VERSION(3,14,0)	
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,14,0)
 		return -EINVAL;
 #else
 		return drm_mmap(filp, vma);
-#endif		
+#endif
 
 	file_priv = filp->private_data;
 	smi = file_priv->minor->dev->dev_private;

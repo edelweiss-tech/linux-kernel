@@ -29,7 +29,6 @@ static int smifb_alloc_shadow_pages(struct smi_framebuffer *gfb, unsigned npages
 	struct page *page;
 	unsigned allocated;
 
-	pr_debug("alloc shadow %d pages\n", npages);
 	order = get_order(npages << PAGE_SHIFT);
 	page = alloc_pages(GFP_HIGHUSER, order);
 	if (!page) {
@@ -44,7 +43,6 @@ static int smifb_alloc_shadow_pages(struct smi_framebuffer *gfb, unsigned npages
 	for (i = 1; i < allocated; i++) {
 		init_page_count(page++);
 	}
-	pr_debug("got %d pages at %x\n", allocated, gfb->shadow_start);
 
 	return 0;
 }
@@ -54,7 +52,6 @@ static void smifb_free_shadow_pages(struct smi_framebuffer *gfb)
 	struct page *page;
 	int i;
 
-	pr_debug("free pages at %x\n", gfb->shadow_start);
 	page = gfb->shadow_start_page;
 	page++;
 	for (i = 1; i < gfb->shadow_npages; i++) {
@@ -79,23 +76,24 @@ static int smifb_mmap(struct fb_info *info,
 #ifdef CONFIG_SMIFB_USE_DMA
 	if (vma->vm_pgoff >= SHADOW_PGOFF) {
 		phys_addr_t shadow_start = afbdev->gfb.shadow_start;
-		unsigned long size;
-		pr_debug("smifb_mmap: pg_off %x, start %x (caller %s)\n",
-			 vma->vm_pgoff, vma->vm_start, current->comm);
+		struct smi_framebuffer *gfb = &afbdev->gfb;
+		unsigned int npages;
 		vma->vm_pgoff -= SHADOW_PGOFF;
 		vma->vm_page_prot = PAGE_USERIO;
-		size = (vma->vm_pgoff + vma_pages(vma)) << PAGE_SHIFT;
+		npages = vma->vm_pgoff + vma_pages(vma);
 		if (!shadow_start) {
-			ret = smifb_alloc_shadow_pages(&afbdev->gfb, size >> PAGE_SHIFT);
+			ret = smifb_alloc_shadow_pages(gfb, npages);
 			if (ret)
 				return ret;
-			shadow_start = afbdev->gfb.shadow_start;
-		} else if ((size >> PAGE_SHIFT) > afbdev->gfb.shadow_npages) {
+			shadow_start = gfb->shadow_start;
+		} else if (npages > gfb->shadow_npages) {
 			return -EINVAL;
 		}
-		pr_debug("smifb_mmap: shadow_start - %08x\n", shadow_start);
-
-		return vm_iomap_memory(vma, shadow_start, vma->vm_end - vma->vm_start);
+		return remap_pfn_range(vma, vma->vm_start, 
+				       page_to_pfn(gfb->shadow_start_page) +
+				       vma->vm_pgoff,
+				       vma->vm_end - vma->vm_start,
+				       vma->vm_page_prot);
 	}
 #endif
 	obj = afbdev->gfb.obj;
@@ -242,7 +240,6 @@ static int smifb_create(struct drm_fb_helper *helper,
 	if (ret)
 		return ret;
 
-	
 	gfbdev->size = size;
 
 	fb = &gfbdev->gfb.base;
@@ -305,6 +302,8 @@ static int smifb_create(struct drm_fb_helper *helper,
 #endif
 
 	smi_fb_zfill(dev, gfbdev);
+
+	smi_bo_unpin(bo);
 
 	DRM_INFO("fb mappable at 0x%lX\n", info->fix.smem_start);
 	DRM_INFO("vram aper at 0x%lX\n", (unsigned long)info->fix.smem_start);
