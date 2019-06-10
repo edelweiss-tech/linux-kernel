@@ -148,6 +148,12 @@ static int smi_crtc_do_set_base(struct drm_crtc *crtc,
 		smi_bo_unreserve(bo);
 		LEAVE(ret);
 	}
+	if (smi_fb->fbdev) {
+		if (bo->kmap.virtual)
+			ttm_bo_kunmap(&bo->kmap);
+		ttm_bo_kmap(&bo->bo, 0, bo->bo.num_pages, &bo->kmap);
+		smi_fb->fbdev->screen_base = bo->kmap.virtual;
+	}
 
 	smi_bo_unreserve(bo);
 
