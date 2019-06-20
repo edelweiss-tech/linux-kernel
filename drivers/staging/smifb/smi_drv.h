@@ -169,6 +169,7 @@ struct smi_connector {
 struct smi_framebuffer {
 	struct drm_framebuffer		base;
 	struct drm_gem_object *obj;
+	struct fb_info *fbdev;	/* Non-NULL if this is fbcon framebuffer */
 #ifdef CONFIG_SMIFB_USE_DMA
 	struct smi_bo *vram_bo;  // real VRAM buffer
 	int is_user;

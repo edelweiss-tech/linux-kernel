@@ -250,6 +250,8 @@ static int smifb_create(struct drm_fb_helper *helper,
 
 	/* setup helper */
 	gfbdev->helper.fb = fb;
+	/* save pointer to fb_info */
+	to_smi_framebuffer(fb)->fbdev = gfbdev->helper.fbdev;
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4,3,0)	
 	gfbdev->helper.fbdev = info;
 #endif
@@ -303,7 +305,13 @@ static int smifb_create(struct drm_fb_helper *helper,
 
 	smi_fb_zfill(dev, gfbdev);
 
+	/*
+	 * Now unmap and unpin the buffer - it will be mapped when
+	 * fbcon is activated.
+	 */
+	ttm_bo_kunmap(&bo->kmap);
 	smi_bo_unpin(bo);
+	info->screen_base = NULL;
 
 	DRM_INFO("fb mappable at 0x%lX\n", info->fix.smem_start);
 	DRM_INFO("vram aper at 0x%lX\n", (unsigned long)info->fix.smem_start);
