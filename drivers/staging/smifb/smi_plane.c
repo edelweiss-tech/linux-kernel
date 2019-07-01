@@ -21,10 +21,10 @@ extern struct smi_crtc * smi_crtc_tab[MAX_CRTC];
 extern struct drm_encoder * smi_enc_tab[MAX_ENCODER];
 extern int g_m_connector;//bit 0: DVI, bit 1: VGA, bit 2: HDMI.
 
-void colorcur2monocur(void * data)
+static void colorcur2monocur(void * data, void *dest)
 {
 	unsigned int * col = (unsigned int *)data;
-	unsigned char * mono = (unsigned char *)data;
+	unsigned char * mono = (unsigned char *)dest;
 	unsigned char pixel = 0;
 	char bit_values;
 
@@ -131,16 +131,32 @@ static void smi_cursor_atomic_update(struct drm_plane *plane,struct drm_plane_st
 			//LEAVE();
 		}
 	
-		if(g_specId == SPC_SM750)
-		{
-			ret = ttm_bo_kmap(&bo->bo, 0, bo->bo.num_pages, &bo->kmap);
-			if (ret)
-				dbg_msg("failed to kmap fbcon\n");
-			else
-			{
-				colorcur2monocur(bo->kmap.virtual);
-				//memset(bo->kmap.virtual,smi_pat,gem->size);
+		if(g_specId == SPC_SM750) {
+			struct smi_bo *vram_bo = to_smi_framebuffer(fb)->vram_bo;
+			ret = smi_bo_reserve(vram_bo, false);
+			if (!ret)
+				ret = ttm_bo_kmap(&vram_bo->bo, 0,
+						  vram_bo->bo.num_pages,
+						  &vram_bo->kmap);
+			if (!ret) {
+				ret = ttm_bo_kmap(&bo->bo, 0, bo->bo.num_pages, &bo->kmap);
+				if (ret) {
+					pr_err("failed to kmap fbcon\n");
+					dbg_msg("failed to kmap fbcon\n");
+					ttm_bo_kunmap(&vram_bo->kmap);
+				} else {
+					colorcur2monocur(bo->kmap.virtual, vram_bo->kmap.virtual);
+					ddk750_initCursor(disp_crtc,
+							  vram_bo->bo.offset,
+							  BPP16_BLACK,
+							  BPP16_WHITE,BPP16_BLUE);
+					ttm_bo_kunmap(&bo->kmap);
+					ttm_bo_kunmap(&vram_bo->kmap);
+				}
 			}
+			smi_bo_unreserve(vram_bo);
+		} else {
+			ddk768_initCursor(disp_crtc,bo->bo.offset,BPP32_BLACK,BPP32_WHITE,BPP32_BLUE);
 		}
 		smi_bo_unreserve(bo);
 	}	
@@ -229,20 +245,20 @@ static int smi_plane_prepare_fb(struct drm_plane *plane, struct drm_plane_state 
 	obj = to_smi_framebuffer(new_state->fb)->obj;
 	user_bo = gem_to_smi_bo(obj);
 
+	if (g_specId == SPC_SM750) {
+		ret = smi_bo_create(new_state->fb->dev, user_bo->bo.mem.size,
+				    user_bo->bo.mem.page_alignment << PAGE_SHIFT,
+				    0, NULL, NULL, &to_smi_framebuffer(new_state->fb)->vram_bo);
+		if (ret) {
+			pr_err("smi_bo_create failed (%d)\n", ret);
+			return ret;
+		}
+		ret = smi_bo_pin(user_bo, TTM_PL_FLAG_SYSTEM, NULL);
+		user_bo = to_smi_framebuffer(new_state->fb)->vram_bo;
+	}
 	ret = smi_bo_pin(user_bo, TTM_PL_FLAG_VRAM, &gpu_addr);
 	if (ret)
 		return ret;
-
-
-	
-	if(g_specId == SPC_SM750)
-	{
-		ddk750_initCursor(disp_crtc,(u32)gpu_addr,BPP16_BLACK,BPP16_WHITE,BPP16_BLUE);
-	}
-	else
-	{
-		ddk768_initCursor(disp_crtc,(u32)gpu_addr,BPP32_BLACK,BPP32_WHITE,BPP32_BLUE);
-	}	
 
 	LEAVE(0);
 }
@@ -256,7 +272,7 @@ static void smi_plane_cleanup_fb(struct drm_plane *plane, struct drm_plane_state
 	ENTER();
 	struct drm_gem_object *obj;
 	struct smi_bo *user_bo;
-	
+
 	if(g_specId == SPC_SM750)
 	{
 		ddk750_enableCursor(SMI0_CTRL, 0);
@@ -268,14 +284,18 @@ static void smi_plane_cleanup_fb(struct drm_plane *plane, struct drm_plane_state
 		ddk768_enableCursor(SMI1_CTRL, 0);
 	}	
 
-	if (!plane->state->fb) {
+	if (!old_state->fb) {
 		LEAVE();
 	}
-	
-	obj = to_smi_framebuffer(plane->state->fb)->obj;
+
+	obj = to_smi_framebuffer(old_state->fb)->obj;
 	user_bo = gem_to_smi_bo(obj);
-	smi_bo_unpin(user_bo);	
-	
+	smi_bo_unpin(user_bo);
+	if (to_smi_framebuffer(old_state->fb)->vram_bo) {
+		smi_bo_unpin(to_smi_framebuffer(old_state->fb)->vram_bo);
+		smi_bo_unref(&to_smi_framebuffer(old_state->fb)->vram_bo);
+	}
+
 	LEAVE();
 }
 
