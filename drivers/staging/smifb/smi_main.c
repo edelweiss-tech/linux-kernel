@@ -83,12 +83,14 @@ static void smi_user_framebuffer_destroy(struct drm_framebuffer *fb)
 	struct smi_framebuffer *smi_fb = to_smi_framebuffer(fb);
 
 #ifdef CONFIG_SMIFB_USE_DMA
-	if (smi_fb->vram_bo) {
+	if (smi_fb->has_dma)
 		smi_stop_dma(smi_fb);
-		smi_bo_unpin(smi_fb->vram_bo);
-		ttm_bo_del_sub_from_lru(&smi_fb->vram_bo->bo); // vvv ???
-	}
 #endif
+	if (smi_fb->vram_bo) {
+		if (smi_fb->vram_bo->pin_count)
+			smi_bo_unpin(smi_fb->vram_bo);
+		smi_bo_unref(&smi_fb->vram_bo);
+	}
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4,1,0)
 	if (smi_fb->obj)//After kernel v4.1, judge it in the function below. by ilena.
 #endif	

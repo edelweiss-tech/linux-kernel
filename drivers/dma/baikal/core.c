@@ -52,9 +52,9 @@ static inline void baikal_dma_desc_fill(struct baikal_dma_desc *desc, phyaddr sr
 {
 	if (desc) {
 		desc->lli.dar.low_part = dst.low_part;
-		desc->lli.dar.high_part = 0x0;
+		desc->lli.dar.high_part = dst.high_part;
 		desc->lli.sar.low_part = src.low_part;
-		desc->lli.sar.high_part = 0x0;
+		desc->lli.sar.high_part = src.high_part;
 		desc->lli.xfer_size = size;
 	}
 }
@@ -354,7 +354,7 @@ void baikal_dma_set_xfer_size(struct baikal_dma *dmac, baikal_dma_dirc dirc, uin
  *
  */
 
-void baikal_dma_set_src(struct baikal_dma *dmac, baikal_dma_dirc dirc, uint8_t chan, uint32_t addr ) 
+void baikal_dma_set_src(struct baikal_dma *dmac, baikal_dma_dirc dirc, uint8_t chan, uint32_t addr, uint32_t addr_hi) 
 {
 	baikal_dma_ctx_sel_reg sel;   
 
@@ -364,7 +364,7 @@ void baikal_dma_set_src(struct baikal_dma *dmac, baikal_dma_dirc dirc, uint8_t c
 	dma_writel(dmac, ctx_sel.dword, sel.dword);
 
 	channel_writel(dmac, chan, sar_ptr_lo, addr);
-	channel_writel(dmac, chan, sar_ptr_hi, 0x0);
+	channel_writel(dmac, chan, sar_ptr_hi, addr_hi);
 }
 
 /**
@@ -379,7 +379,7 @@ void baikal_dma_set_src(struct baikal_dma *dmac, baikal_dma_dirc dirc, uint8_t c
  * need to call this function.
  *
  */
-void baikal_dma_set_dst(struct baikal_dma *dmac, baikal_dma_dirc dirc, uint8_t chan, uint32_t addr) 
+void baikal_dma_set_dst(struct baikal_dma *dmac, baikal_dma_dirc dirc, uint8_t chan, uint32_t addr, uint32_t addr_hi) 
 {
 	baikal_dma_ctx_sel_reg sel;
 
@@ -389,7 +389,7 @@ void baikal_dma_set_dst(struct baikal_dma *dmac, baikal_dma_dirc dirc, uint8_t c
 	dma_writel(dmac, ctx_sel.dword, sel.dword);
 
 	channel_writel(dmac, chan, dar_ptr_lo, addr);
-	channel_writel(dmac, chan, dar_ptr_hi, 0x0);
+	channel_writel(dmac, chan, dar_ptr_hi, addr_hi);
 }
 
 /**
@@ -1028,8 +1028,8 @@ static baikal_dmareturn_t inline baikal_dma_prepare_single_block(struct baikal_d
 	baikal_dma_set_op(dmac, chan->dirc, TRUE);
 	baikal_dma_set_ctrl(dmac, chan->dirc, chan->id, DMA_SINGLE_BLOCK);
 	baikal_dma_set_xfer_size(dmac, chan->dirc, chan->id, chan->xfer_size);
-	baikal_dma_set_src(dmac, chan->dirc, chan->id, desc->lli.sar.low_part);
-	baikal_dma_set_dst(dmac, chan->dirc, chan->id, desc->lli.dar.low_part);
+	baikal_dma_set_src(dmac, chan->dirc, chan->id, desc->lli.sar.low_part, desc->lli.sar.high_part);
+	baikal_dma_set_dst(dmac, chan->dirc, chan->id, desc->lli.dar.low_part, desc->lli.dar.high_part);
 	baikal_dma_set_weight(dmac, chan->dirc, chan->id, chan->priority);
 
 	if (chan->dirc == DMA_WRITE) {

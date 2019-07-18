@@ -86,6 +86,7 @@ static void smi_dma_start_xfer(struct smi_framebuffer *smi_fb)
 	smi_fb->start_off = smi_fb->end_off = 0;
 	mutex_unlock(&smi_fb->mutex); // unlock early to allow user side updating start_off/end_off
 
+	smi_bo_reserve(src_bo, false);
 	ret = ttm_bo_kmap(&src_bo->bo, start_page, num_pages, &src_bo->kmap);
 	if (ret) {
 		smfb_err(smi_fb, "ttm_bo_kmap %lx:%lx error %d\n", start_page, num_pages, ret);
@@ -95,6 +96,7 @@ static void smi_dma_start_xfer(struct smi_framebuffer *smi_fb)
 
 	dma_cache_sync(NULL, kmap_va + start_off, size, DMA_TO_DEVICE);
 	ttm_bo_kunmap(&src_bo->kmap);
+	smi_bo_unreserve(src_bo);
 
 #if 0 /* async DMA API */
 	tx = dev->device_prep_dma_memcpy(chan, dst, src, size, 0);
@@ -302,11 +304,12 @@ ssize_t dw_fb_write(struct fb_info *info, const char __user *buf,
 	unsigned long pfn;
 	phys_addr_t pbuf;
 	unsigned long total_size;
-	unsigned long dma_size;
-	u16 lead = 0, tail = 0;
 
 	if (info->state != FBINFO_STATE_RUNNING)
 		return -EPERM;
+
+	if (((unsigned long)buf & 3) || (p & 3) || (count & 3))
+		return -EINVAL; /* must be word-aligned */
 
 	total_size = info->screen_size;
 
@@ -334,32 +337,18 @@ ssize_t dw_fb_write(struct fb_info *info, const char __user *buf,
 
 	dma_cache_wback_inv((uint32_t)buf, count);
 
-	/* Odd address = can't DMA. Align */
-	if (dst & 3) {
-		lead = 4 - (dst & 3);
-		if (copy_from_user((char *)dst, buf, lead))
-			return -EFAULT;
-		buf += lead;
-		dst += lead;
-	}
-	/* DMA resolution is 32 bits */
-	if ((count - lead) & 3)
-		tail = (count - lead) & 3;
-
-	/* DMA the data */
-	dma_size = count - lead - tail;
-
 	/* Get physical address based on an user-virtual address. */
 	if (get_pfn((unsigned long)buf, VM_WRITE, &pfn) == 0) {
-		pbuf = (pfn << PAGE_SHIFT) | (((uint32_t)buf) & ~PAGE_MASK);
+		pbuf = PFN_PHYS(pfn) | (((uint32_t)buf) & ~PAGE_MASK);
 	} else {
 		pr_err("%s: cannot get pfn\n", __FUNCTION__);
 		return -EFAULT;
 	}
 
-	err = sm_dma_start(info, pbuf /* MEM */, dst /* PCI */, dma_size /*size*/);
+	err = sm_dma_start(info, pbuf /* MEM */, dst /* PCI */, count /*size*/);
 
 	if  (!err)
 		*ppos += count;
+
 	return (err) ? err : count;
 }

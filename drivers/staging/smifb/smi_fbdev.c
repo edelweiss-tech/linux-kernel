@@ -18,6 +18,51 @@
 extern ssize_t dw_fb_write(struct fb_info *info, const char __user *buf,
 			size_t count, loff_t *ppos);
 extern int dw_fb_ioctl(struct fb_info *info, u_int cmd, u_long arg);
+#define SHADOWFB_OFF	0x10000000	/* 256MB - above VRAM size */
+#define SHADOW_PGOFF	(SHADOWFB_OFF >> PAGE_SHIFT)
+#endif
+
+#ifdef CONFIG_SMIFB_USE_DMA
+static int smifb_alloc_shadow_pages(struct smi_framebuffer *gfb, unsigned npages)
+{
+	int order, i;
+	struct page *page;
+	unsigned allocated;
+
+	order = get_order(npages << PAGE_SHIFT);
+	page = alloc_pages(GFP_HIGHUSER, order);
+	if (!page) {
+		pr_err("smifb_alloc_shadow_pages: no memory!\n");
+		return -ENOMEM;
+	}
+	allocated = 1 << order;
+	gfb->shadow_npages = allocated;
+	gfb->shadow_start = page_to_phys(page);
+	gfb->shadow_start_page = page++;
+	/* page_count for page[0] is OK */
+	for (i = 1; i < allocated; i++) {
+		init_page_count(page++);
+	}
+
+	return 0;
+}
+
+static void smifb_free_shadow_pages(struct smi_framebuffer *gfb)
+{
+	struct page *page;
+	int i;
+
+	page = gfb->shadow_start_page;
+	page++;
+	for (i = 1; i < gfb->shadow_npages; i++) {
+		put_page_testzero(page);
+		page++;
+	}
+	__free_pages(gfb->shadow_start_page, get_order(gfb->shadow_npages << PAGE_SHIFT));
+	gfb->shadow_start_page = NULL;
+	gfb->shadow_start = 0;
+	gfb->shadow_npages = 0;
+}
 #endif
 
 static int smifb_mmap(struct fb_info *info,
@@ -26,6 +71,31 @@ static int smifb_mmap(struct fb_info *info,
 	struct smi_fbdev *afbdev = info->par;
 	struct drm_gem_object *obj;
 	struct smi_bo *bo;
+	int ret;
+
+#ifdef CONFIG_SMIFB_USE_DMA
+	if (vma->vm_pgoff >= SHADOW_PGOFF) {
+		phys_addr_t shadow_start = afbdev->gfb.shadow_start;
+		struct smi_framebuffer *gfb = &afbdev->gfb;
+		unsigned int npages;
+		vma->vm_pgoff -= SHADOW_PGOFF;
+		vma->vm_page_prot = PAGE_USERIO;
+		npages = vma->vm_pgoff + vma_pages(vma);
+		if (!shadow_start) {
+			ret = smifb_alloc_shadow_pages(gfb, npages);
+			if (ret)
+				return ret;
+			shadow_start = gfb->shadow_start;
+		} else if (npages > gfb->shadow_npages) {
+			return -EINVAL;
+		}
+		return remap_pfn_range(vma, vma->vm_start, 
+				       page_to_pfn(gfb->shadow_start_page) +
+				       vma->vm_pgoff,
+				       vma->vm_end - vma->vm_start,
+				       vma->vm_page_prot);
+	}
+#endif
 	obj = afbdev->gfb.obj;
 	bo = gem_to_smi_bo(obj);	
 
@@ -170,7 +240,6 @@ static int smifb_create(struct drm_fb_helper *helper,
 	if (ret)
 		return ret;
 
-	
 	gfbdev->size = size;
 
 	fb = &gfbdev->gfb.base;
@@ -181,6 +250,8 @@ static int smifb_create(struct drm_fb_helper *helper,
 
 	/* setup helper */
 	gfbdev->helper.fb = fb;
+	/* save pointer to fb_info */
+	to_smi_framebuffer(fb)->fbdev = gfbdev->helper.fbdev;
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4,3,0)	
 	gfbdev->helper.fbdev = info;
 #endif
@@ -233,6 +304,14 @@ static int smifb_create(struct drm_fb_helper *helper,
 #endif
 
 	smi_fb_zfill(dev, gfbdev);
+
+	/*
+	 * Now unmap and unpin the buffer - it will be mapped when
+	 * fbcon is activated.
+	 */
+	ttm_bo_kunmap(&bo->kmap);
+	smi_bo_unpin(bo);
+	info->screen_base = NULL;
 
 	DRM_INFO("fb mappable at 0x%lX\n", info->fix.smem_start);
 	DRM_INFO("vram aper at 0x%lX\n", (unsigned long)info->fix.smem_start);
@@ -293,6 +372,8 @@ static int smi_fbdev_destroy(struct drm_device *dev,
 #ifdef CONFIG_SMIFB_USE_DMA
 	if (gfb->has_dma)
 		smi_stop_dma(gfb);
+	if (gfb->shadow_start)
+		smifb_free_shadow_pages(gfb);
 #endif
 
 	drm_fb_helper_fini(&gfbdev->helper);
