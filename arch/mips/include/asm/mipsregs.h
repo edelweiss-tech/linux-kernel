@@ -2623,6 +2623,7 @@ set_##name(unsigned int set)					\
 	res = read_##name();					\
 	new = res | set;					\
 	write_##name(new);					\
+	_ehb();							\
 								\
 	return res;						\
 }								\
@@ -2635,6 +2636,7 @@ clear_##name(unsigned int clear)				\
 	res = read_##name();					\
 	new = res & ~clear;					\
 	write_##name(new);					\
+	_ehb();							\
 								\
 	return res;						\
 }								\
@@ -2648,6 +2650,7 @@ change_##name(unsigned int change, unsigned int val)		\
 	new = res & ~change;					\
 	new |= (val & change);					\
 	write_##name(new);					\
+	_ehb();							\
 								\
 	return res;						\
 }
