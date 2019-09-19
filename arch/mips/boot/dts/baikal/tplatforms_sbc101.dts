@@ -1,0 +1,198 @@
+/*
+ * Baikal-T1 Redberry Pi board device tree
+ *
+ * Copyright (C) 2019 T-platforms JSC
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ */
+
+/dts-v1/;
+
+#include <dt-bindings/interrupt-controller/mips-gic.h>
+#include <dt-bindings/gpio/gpio.h>
+
+#include "baikal_t1_soc.dtsi"
+
+/ {
+	model = "Redberry Pi Board";
+	compatible = "baikal,mips", "baikal,baikal-t1-soc", "tp,sbc101";
+
+	chosen {
+		bootargs = "root=/dev/ram rw console=ttyS0,115200 earlyprintk=uart8250,mmio32,0x1F04A000,115200 nohtw";
+		linux,initrd-start = <0 0x01000000>;
+		linux,initrd-end   = <0 0x02000000>;
+	};
+
+	memory {
+		device_type = "memory";
+		reg = <0 0x00000000 0 0x08000000>,
+		      <0 0x20000000 0 0x70000000>;
+	};
+};
+
+&usb {
+	status = "okay";
+
+	reset-gpio = <&porta 13 GPIO_ACTIVE_LOW>;
+};
+
+&sata {
+	status = "okay";
+};
+
+&pcie {
+	status = "okay";
+
+	reset-gpio = <&porta 14 GPIO_ACTIVE_LOW>;
+};
+
+&gmac0 {
+	status = "okay";
+	phy-mode = "rgmii-rxid";
+	phy-handle = <&gmac0_phy>;
+	snps,reset-gp-out;
+	snps,reset-active-low;
+	snps,reset-delays-us = <0 11000 31000>;
+
+	gmdio0: gmac0_mdio {
+		compatible = "snps,dwmac-mdio";
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		gmac0_phy: ethernet-phy@1 {
+			compatible = "realtek,rtl8211e", "ethernet-phy-id001c.c915";
+			reg = <0x1>;
+		};
+	};
+};
+
+&gmac1 {
+	status = "okay";
+	phy-mode = "rgmii-rxid";
+	phy-handle = <&gmac1_phy>;
+	snps,reset-gp-out;
+	snps,reset-active-low;
+	snps,reset-delays-us = <0 11000 31000>;
+
+	gmdio1: gmac1_mdio {
+		compatible = "snps,dwmac-mdio";
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		gmac1_phy: ethernet-phy@1 {
+			compatible = "realtek,rtl8211e", "ethernet-phy-id001c.c915";
+			reg = <0x1>;
+		};
+	};
+};
+
+&gpio {
+	status = "okay";
+};
+
+&gpio3 {
+	status = "okay";
+};
+
+&bc {
+	status = "okay";
+};
+
+&i2c0 {
+	status = "okay";
+	clock-frequency = <100000>;
+};
+
+&i2c1 {
+	status = "okay";
+
+	bmc: bmc@8 {
+		compatible = "tp,mitx2-bmc", "tp,bt-bmc";
+		reg = <0x08>;
+	};
+
+	shred: gpio@21 {
+		compatible = "nxp,pcf8574";
+		reg = <0x21>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		ngpios = <8>; /* Informative */
+	};
+
+	rtc: rtc@55 {
+		compatible = "nxp,pcf2129", "nxp,pcf2127";
+		reg = <0x55>;
+	};
+
+	spd: eeprom@54 {
+		compatible = "atmel,24c02";
+		pagesize = <16>;
+		reg = <0x54>;
+	};
+
+	fru: eeprom@57 {
+		compatible = "atmel,24c32";
+		pagesize = <32>;
+		reg = <0x57>;
+	};
+
+	clkgen0: clkgen@68 {
+		compatible = "idt,5p49v59";
+		reg = <0x68>;
+	};
+
+	clkgen1: clkgen@6A {
+		compatible = "idt,5p49v59";
+		reg = <0x6A>;
+	};
+};
+
+&spi0 {
+	status = "okay";
+	num-cs = <2>;
+	cs-gpios = <&porta 8 GPIO_ACTIVE_LOW>, <&porta 9 GPIO_ACTIVE_LOW>;
+	waveshare32b@0 {
+		compatible = "ilitek,ili9340";
+		reg = <0x0>;
+		spi-max-frequency = <15000000>;
+		rotate = <90>;
+		fps = <25>;
+		bgr;
+		buswidth = <0x8>;
+		reset-gpios = <&porta 31 GPIO_ACTIVE_LOW>;
+		dc-gpios = <&porta 26 GPIO_ACTIVE_HIGH>;
+		debug = <0>;
+	};
+	waveshare32b_ts@1 {
+		compatible = "ti,ads7846";
+		reg = <0x1>;
+		spi-max-frequency = <2000000>;
+		interrupts = <24 2>;
+		interrupt-parent = <&porta>;
+		pendown-gpio = <&porta 24 GPIO_ACTIVE_LOW>;
+		ti,x-plate-ohms = [00 3c];
+		ti,pressure-max = [00 ff];
+	};
+};
+
+&spi1 {
+	status = "okay";
+	num-cs = <1>;
+	cs-gpios = <&porta 10 GPIO_ACTIVE_LOW>;
+	spidev0@2 {
+		compatible = "rohm,dh2228fv";
+		reg = <0>;
+		spi-max-frequency = <15000000>;
+	};
+};
+
+&pvt {
+	status = "okay";
+};
+
+&efuse {
+	status = "okay";
+};

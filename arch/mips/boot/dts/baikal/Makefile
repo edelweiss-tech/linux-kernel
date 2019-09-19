@@ -10,6 +10,7 @@ dtb-$(CONFIG_DTB_TP_MSBT2)	+= tplatforms_msbt2.dtb
 dtb-$(CONFIG_DTB_TP_MRBT1)	+= tplatforms_mrbt1.dtb
 dtb-$(CONFIG_DTB_TP_RT1MB)	+= tplatforms_rt1mb.dtb
 dtb-$(CONFIG_DTB_TP_BN1BT1)	+= tplatforms_bn1bt1.dtb
+dtb-$(CONFIG_DTB_TP_SBC101)	+= tplatforms_sbc101.dtb
 
 dtb-$(CONFIG_DT_NONE)		+= \
 					baikal.dtb	\
@@ -22,7 +23,8 @@ dtb-$(CONFIG_DT_NONE)		+= \
 					tplatrofms_msbt2.dtb \
 					tplatrofms_mrbt1.dtb \
 					tplatforms_rt1mb.dtb \
-					tplatforms_bn1bt1.dtb
+					tplatforms_bn1bt1.dtb \
+					tplatforms_sbc101.dtb
 
 obj-y				+= $(patsubst %.dtb, %.dtb.o, $(dtb-y))
 
