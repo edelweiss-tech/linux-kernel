@@ -296,6 +296,9 @@ config MACH_BAIKAL_SBC101
 	# PCIe
 	select PCI_DRIVERS_GENERIC
 
+	# GPIO direction
+	select TP_GPIODIR_CTL
+
 endchoice
 
 choice
@@ -408,6 +411,16 @@ config DW_PCIE_HOST_INIT
 	  Answer N only if you are sure that PCI is properly initialized by u-boot.
 
 endif
+
+config TP_GPIODIR_CTL
+	bool "T-Platforms GPIO direction control"
+	select PINCTRL
+	select PINCONF
+	select GENERIC_PINCONF
+	default n
+	help
+	  Say Y to enable support for T-Platforms external
+	  GPIO direction control.
 
 menuconfig BAIKAL_ERRATA
 	bool "Baikal SoC Errata Fix"

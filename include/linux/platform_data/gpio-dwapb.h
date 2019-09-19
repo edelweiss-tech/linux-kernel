@@ -21,6 +21,9 @@ struct dwapb_port_property {
 	unsigned int	gpio_base;
 	unsigned int	irq;
 	bool		irq_shared;
+#ifdef CONFIG_TP_GPIODIR_CTL
+	unsigned int	*pinctrl_map;
+#endif
 };
 
 struct dwapb_platform_data {

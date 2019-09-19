@@ -10,6 +10,10 @@
 #include <linux/pm.h>
 #include <linux/rtc.h>
 #include <linux/serio.h>
+#include <linux/platform_device.h>
+#include <linux/pinctrl/pinctrl.h>
+#include <linux/pinctrl/pinconf.h>
+#include <linux/pinctrl/pinconf-generic.h>
 
 enum I2C_REGS {
 	R_ID1 = 0,
@@ -28,6 +32,9 @@ enum I2C_REGS {
 	R_SCRATCH3,
 	R_SCRATCH4,
 	R_CAP,
+	R_GPIODIR0,
+	R_GPIODIR1,
+	R_GPIODIR2,
 	R_COUNT
 };
 
@@ -44,6 +51,8 @@ enum I2C_REGS {
 #define BMC_CAP_PWRBTN		0x1
 #define BMC_CAP_TOUCHPAD	0x2
 #define BMC_CAP_RTC		0x4
+#define BMC_CAP_FRU		0x8
+#define BMC_CAP_GPIODIR		0x10
 
 #define BMC_SERIO_BUFSIZE	7
 
@@ -55,12 +64,14 @@ struct bmc_poll_data {
 
 static struct i2c_client *bmc_i2c;
 static struct i2c_client *rtc_i2c;
-static struct i2c_client *serio_i2c;
 static struct i2c_driver mitx2_bmc_i2c_driver;
 static struct input_dev *button_dev;
 static struct bmc_poll_data poll_data;
 static struct task_struct *polling_task;
+#ifdef CONFIG_SERIO
+static struct i2c_client *serio_i2c;
 static struct task_struct *touchpad_task;
+#endif
 static u8 bmc_proto_version[3];
 static u8 bmc_bootreason[2];
 static u8 bmc_scratch[4];
@@ -222,6 +233,156 @@ touchpad_poll_fn(void *data) {
 	return 0;
 }
 #endif /* CONFIG_SERIO */
+
+#ifdef CONFIG_PINCTRL
+static uint8_t bmc_pincf_state [3];
+#define BMC_NPINS	(sizeof(bmc_pincf_state) * 8)
+
+static struct pinctrl_pin_desc bmc_pin_desc[BMC_NPINS] = {
+	PINCTRL_PIN(0, "P0"),
+	PINCTRL_PIN(1, "P1"),
+	PINCTRL_PIN(2, "P2"),
+	PINCTRL_PIN(3, "P3"),
+	PINCTRL_PIN(4, "P4"),
+	PINCTRL_PIN(5, "P5"),
+	PINCTRL_PIN(6, "P6"),
+	PINCTRL_PIN(7, "P7"),
+	PINCTRL_PIN(8, "P8"),
+	PINCTRL_PIN(9, "P9"),
+	PINCTRL_PIN(10, "P10"),
+	PINCTRL_PIN(11, "P11"),
+	PINCTRL_PIN(12, "P12"),
+	PINCTRL_PIN(13, "P13"),
+	PINCTRL_PIN(14, "P14"),
+	PINCTRL_PIN(15, "P15"),
+	PINCTRL_PIN(16, "P16"),
+	PINCTRL_PIN(17, "P17"),
+	PINCTRL_PIN(18, "P18"),
+	PINCTRL_PIN(19, "P19"),
+	PINCTRL_PIN(20, "P20"),
+	PINCTRL_PIN(21, "P21"),
+	PINCTRL_PIN(22, "P22"),
+	PINCTRL_PIN(23, "P23"),
+};
+
+#define PCTRL_DEV	"bmc_pinctrl"
+
+static int bmc_pin_config_get(struct pinctrl_dev *pctldev,
+			      unsigned pin,
+			      unsigned long *config)
+{
+	int idx, bit;
+
+	if (pin > BMC_NPINS)
+		return -EINVAL;
+
+	idx = pin >> 3;
+	bit = pin & 7;
+
+	*config = !!(bmc_pincf_state[idx] & (1 << bit));
+	return 0;
+}
+
+static int bmc_pin_config_set(struct pinctrl_dev *pctldev,
+			      unsigned pin,
+			      unsigned long *config,
+			      unsigned nc)
+{
+	int idx, bit;
+	enum pin_config_param param;
+	int arg;
+
+	if (pin > BMC_NPINS)
+		return -EINVAL;
+
+	idx = pin >> 3;
+	bit = pin & 7;
+
+	param = pinconf_to_config_param (*config);
+	arg = pinconf_to_config_argument (*config);
+	if (param != PIN_CONFIG_OUTPUT)
+		return -EINVAL;
+
+	if (arg)
+		bmc_pincf_state[idx] |= (1 << bit);
+	else
+		bmc_pincf_state[idx] &= ~(1 << bit);
+dev_dbg(&bmc_i2c->dev, "bmc_pin_config_set: pin %u, dir %lu\n", pin, *config);
+
+	return i2c_smbus_write_byte_data(bmc_i2c, R_GPIODIR0 + idx, bmc_pincf_state[idx]);
+}
+
+void pinconf_generic_dump_config(struct pinctrl_dev *pctldev,
+				 struct seq_file *s, unsigned long config);
+
+void pinctrl_utils_free_map(struct pinctrl_dev *pctldev,
+			    struct pinctrl_map *map, unsigned num_maps);
+
+static const struct pinconf_ops bmc_confops = {
+	.pin_config_get = bmc_pin_config_get,
+	.pin_config_set = bmc_pin_config_set,
+	.pin_config_config_dbg_show = pinconf_generic_dump_config,
+};
+
+static int bmc_groups_count(struct pinctrl_dev *pctldev)
+{
+	return 0;
+}
+
+static const char *bmc_group_name(struct pinctrl_dev *pctldev,
+				   unsigned selector)
+{
+	return NULL;
+}
+
+static const struct pinctrl_ops bmc_ctrl_ops = {
+	.get_groups_count = bmc_groups_count,
+	.get_group_name = bmc_group_name,
+	.dt_node_to_map = pinconf_generic_dt_node_to_map_pin,
+	.dt_free_map = pinctrl_utils_free_map,
+};
+
+static struct pinctrl_desc bmc_pincrtl_desc = {
+	.name = PCTRL_DEV,
+	.pins = bmc_pin_desc,
+	.pctlops = &bmc_ctrl_ops,
+	.npins = BMC_NPINS,
+	.confops = &bmc_confops,
+};
+
+static struct pinctrl_dev *bmc_pinctrl_dev;
+
+static int bmc_pinctrl_register(struct device *dev)
+{
+	struct pinctrl_dev *pctrl_dev;
+	struct platform_device *pbdev;
+
+	pbdev = platform_device_alloc(PCTRL_DEV, -1);
+	pbdev->dev.parent = dev;
+	pbdev->dev.of_node = of_find_node_by_name(dev->of_node, "bmc_pinctrl");
+	platform_device_add(pbdev);
+	pctrl_dev = devm_pinctrl_register(&pbdev->dev, &bmc_pincrtl_desc, NULL);
+	if (IS_ERR(pctrl_dev)) {
+		dev_err(&pbdev->dev, "Can't register pinctrl (%ld)\n", PTR_ERR(pctrl_dev));
+		return PTR_ERR(pctrl_dev);
+	} else {
+		dev_info(&pbdev->dev, "BMC pinctrl registered\n");
+		bmc_pinctrl_dev = pctrl_dev;
+	}
+	/* reset all pins to default state */
+	i2c_smbus_write_byte_data(to_i2c_client(dev), R_GPIODIR0, 0);
+	i2c_smbus_write_byte_data(to_i2c_client(dev), R_GPIODIR1, 0);
+	i2c_smbus_write_byte_data(to_i2c_client(dev), R_GPIODIR2, 0);
+	return 0;
+}
+
+static void bmc_pinctrl_unregister(void)
+{
+	if (bmc_pinctrl_dev)
+		devm_pinctrl_unregister(&bmc_i2c->dev, bmc_pinctrl_dev);
+}
+
+#endif
 
 void
 bmc_pwroff_rq(void) {
@@ -390,9 +551,9 @@ bmc_create_client_devices(struct device *bmc_dev)
 		serio_register_port(serio);
 		dev_set_drvdata(&serio_i2c->dev, serio);
 		touchpad_task = kthread_run(touchpad_poll_fn, NULL, "BMC serio poll task");
-#endif
 
 skip_tp:
+#endif
 		client_addr++;
 	}
 
@@ -417,6 +578,11 @@ skip_tp:
 fail:
 		client_addr++;
 	}
+
+#ifdef CONFIG_PINCTRL
+	if (bmc_cap & BMC_CAP_GPIODIR || 1 /*vvv*/)
+		bmc_pinctrl_register(bmc_dev);
+#endif
 
 	return ret;
 }
@@ -468,7 +634,7 @@ mitx2_bmc_i2c_probe(struct i2c_client *client,
 		polling_task = kthread_run(pwroff_rq_poll_fn, NULL, "BMC poll task");
 	}
 
-	if (bmc_cap)
+	if (bmc_cap || 1 /*vvv*/)
 		err = bmc_create_client_devices(&client->dev);
 
 	bmc_i2c = client;
@@ -499,6 +665,10 @@ mitx2_bmc_i2c_remove(struct i2c_client *client)
 #endif
 	if (rtc_i2c)
 		i2c_unregister_device(rtc_i2c);
+#ifdef CONFIG_PINCTRL
+	bmc_pinctrl_unregister();
+#endif
+
 	return 0;
 }
 

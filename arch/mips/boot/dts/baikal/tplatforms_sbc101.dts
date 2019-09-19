@@ -112,6 +112,56 @@
 	bmc: bmc@8 {
 		compatible = "tp,mitx2-bmc", "tp,bt-bmc";
 		reg = <0x08>;
+		bmc_pinctrl: bmc_pinctrl {
+			bmc0_in:  P0_in  { pins = "P0"; output-low; };
+			bmc0_out: P0_out { pins = "P0"; output-high; };
+			bmc1_in:  P1_in  { pins = "P1"; output-low; };
+			bmc1_out: P1_out { pins = "P1"; output-high; };
+			bmc2_in:  P2_in  { pins = "P2"; output-low; };
+			bmc2_out: P2_out { pins = "P2"; output-high; };
+			bmc3_in:  P3_in  { pins = "P3"; output-low; };
+			bmc3_out: P3_out { pins = "P3"; output-high; };
+			bmc4_in:  P4_in  { pins = "P4"; output-low; };
+			bmc4_out: P4_out { pins = "P4"; output-high; };
+			bmc5_in:  P5_in  { pins = "P5"; output-low; };
+			bmc5_out: P5_out { pins = "P5"; output-high; };
+			bmc6_in:  P6_in  { pins = "P6"; output-low; };
+			bmc6_out: P6_out { pins = "P6"; output-high; };
+			bmc7_in:  P7_in  { pins = "P7"; output-low; };
+			bmc7_out: P7_out { pins = "P7"; output-high; };
+			bmc8_in:  P8_in  { pins = "P8"; output-low; };
+			bmc8_out: P8_out { pins = "P8"; output-high; };
+			bmc9_in:  P9_in  { pins = "P9"; output-low; };
+			bmc9_out: P9_out { pins = "P9"; output-high; };
+			bmc10_in:  P10_in  { pins = "P10"; output-low; };
+			bmc10_out: P10_out { pins = "P10"; output-high; };
+			bmc11_in:  P11_in  { pins = "P11"; output-low; };
+			bmc11_out: P11_out { pins = "P11"; output-high; };
+			bmc12_in:  P12_in  { pins = "P12"; output-low; };
+			bmc12_out: P12_out { pins = "P12"; output-high; };
+			bmc13_in:  P13_in  { pins = "P13"; output-low; };
+			bmc13_out: P13_out { pins = "P13"; output-high; };
+			bmc14_in:  P14_in  { pins = "P14"; output-low; };
+			bmc14_out: P14_out { pins = "P14"; output-high; };
+			bmc15_in:  P15_in  { pins = "P15"; output-low; };
+			bmc15_out: P15_out { pins = "P15"; output-high; };
+			bmc16_in:  P16_in  { pins = "P16"; output-low; };
+			bmc16_out: P16_out { pins = "P16"; output-high; };
+			bmc17_in:  P17_in  { pins = "P17"; output-low; };
+			bmc17_out: P17_out { pins = "P17"; output-high; };
+			bmc18_in:  P18_in  { pins = "P18"; output-low; };
+			bmc18_out: P18_out { pins = "P18"; output-high; };
+			bmc19_in:  P19_in  { pins = "P19"; output-low; };
+			bmc19_out: P19_out { pins = "P19"; output-high; };
+			bmc20_in:  P20_in  { pins = "P20"; output-low; };
+			bmc20_out: P20_out { pins = "P20"; output-high; };
+			bmc21_in:  P21_in  { pins = "P21"; output-low; };
+			bmc21_out: P21_out { pins = "P21"; output-high; };
+			bmc22_in:  P22_in  { pins = "P22"; output-low; };
+			bmc22_out: P22_out { pins = "P22"; output-high; };
+			bmc23_in:  P23_in  { pins = "P23"; output-low; };
+			bmc23_out: P23_out { pins = "P23"; output-high; };
+		};
 	};
 
 	shred: gpio@21 {
@@ -195,4 +245,69 @@
 
 &efuse {
 	status = "okay";
+};
+
+&porta {
+	tp-pinctrl = "bmc_pinctrl";
+	pinctrl-map = <0>, <1>, <2>, <3>, <4>, <0xff>, <0xff>, <0xff>,
+		      <22>, <23>, <0xff>, <0xff>, <0xff>, <0xff>, <0xff>, <0xff>,
+		      <0xff>, <8>, <0xff>, <9>, <10>, <11>, <12>, <13>,
+		      <14>, <15>, <16>, <17>, <18>, <19>, <20>, <21>;
+};
+
+&gpio {
+	pinctrl-names = "in0", "out0", "in1", "out1", "in2", "out2", "in3", "out3",
+		"in4", "out4", "in5", "out5", "in6", "out6", "in7", "out7",
+		"in8", "out8", "in9", "out9", "in10", "out10", "in11", "out11",
+		"in12", "out12", "in13", "out13", "in14", "out14", "in15", "out15",
+		"in16", "out16", "in17", "out17", "in18", "out18", "in19", "out19",
+		"in20", "out20", "in21", "out21", "in22", "out22", "in23", "out23";
+	pinctrl-0 = <&bmc0_in>;
+	pinctrl-1 = <&bmc0_out>;
+	pinctrl-2 = <&bmc1_in>;
+	pinctrl-3 = <&bmc1_out>;
+	pinctrl-4 = <&bmc2_in>;
+	pinctrl-5 = <&bmc2_out>;
+	pinctrl-6 = <&bmc3_in>;
+	pinctrl-7 = <&bmc3_out>;
+	pinctrl-8 = <&bmc4_in>;
+	pinctrl-9 = <&bmc4_out>;
+	pinctrl-10 = <&bmc5_in>;
+	pinctrl-11 = <&bmc5_out>;
+	pinctrl-12 = <&bmc6_in>;
+	pinctrl-13 = <&bmc6_out>;
+	pinctrl-14 = <&bmc7_in>;
+	pinctrl-15 = <&bmc7_out>;
+	pinctrl-16 = <&bmc8_in>;
+	pinctrl-17 = <&bmc8_out>;
+	pinctrl-18 = <&bmc9_in>;
+	pinctrl-19 = <&bmc9_out>;
+	pinctrl-20 = <&bmc10_in>;
+	pinctrl-21 = <&bmc10_out>;
+	pinctrl-22 = <&bmc11_in>;
+	pinctrl-23 = <&bmc11_out>;
+	pinctrl-24 = <&bmc12_in>;
+	pinctrl-25 = <&bmc12_out>;
+	pinctrl-26 = <&bmc13_in>;
+	pinctrl-27 = <&bmc13_out>;
+	pinctrl-28 = <&bmc14_in>;
+	pinctrl-29 = <&bmc14_out>;
+	pinctrl-30 = <&bmc15_in>;
+	pinctrl-31 = <&bmc15_out>;
+	pinctrl-32 = <&bmc16_in>;
+	pinctrl-33 = <&bmc16_out>;
+	pinctrl-34 = <&bmc17_in>;
+	pinctrl-35 = <&bmc17_out>;
+	pinctrl-36 = <&bmc18_in>;
+	pinctrl-37 = <&bmc18_out>;
+	pinctrl-38 = <&bmc19_in>;
+	pinctrl-39 = <&bmc19_out>;
+	pinctrl-40 = <&bmc20_in>;
+	pinctrl-41 = <&bmc20_out>;
+	pinctrl-42 = <&bmc21_in>;
+	pinctrl-43 = <&bmc21_out>;
+	pinctrl-44 = <&bmc22_in>;
+	pinctrl-45 = <&bmc22_out>;
+	pinctrl-46 = <&bmc23_in>;
+	pinctrl-47 = <&bmc23_out>;
 };

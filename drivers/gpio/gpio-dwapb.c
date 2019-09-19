@@ -27,6 +27,8 @@
 #include <linux/spinlock.h>
 #include <linux/platform_data/gpio-dwapb.h>
 #include <linux/slab.h>
+#include <linux/pinctrl/pinctrl.h>
+#include <linux/pinctrl/consumer.h>
 
 #include "gpiolib.h"
 
@@ -79,6 +81,13 @@ struct dwapb_gpio_port {
 	struct dwapb_context	*ctx;
 #endif
 	unsigned int		idx;
+#ifdef CONFIG_TP_GPIODIR_CTL
+	struct pinctrl		*pinctrl;
+	struct pinctrl_state	**pinctrl_out_states;
+	struct pinctrl_state	**pinctrl_in_states;
+	int			(*dir_out)(struct gpio_chip *gc, unsigned int gpio, int val);
+	int			(*dir_in)(struct gpio_chip *gc, unsigned int gpio);
+#endif
 };
 
 struct dwapb_gpio {
@@ -387,6 +396,94 @@ static void dwapb_irq_teardown(struct dwapb_gpio *gpio)
 	gpio->domain = NULL;
 }
 
+#ifdef CONFIG_TP_GPIODIR_CTL
+
+static int tp_pinctrl_direction_output(struct gpio_chip *gc, unsigned int gpio, int val)
+{
+	struct dwapb_gpio_port *port = gpiochip_get_data(gc);
+	struct pinctrl_state *direction_state;
+	int rc = 0;
+
+	direction_state = port->pinctrl_out_states[gpio];
+	if (direction_state) {
+		rc = pinctrl_select_state(port->pinctrl, direction_state);
+		if (rc)
+			return rc;
+	}
+
+	return port->dir_out(gc, gpio, val);
+}
+
+static int tp_pinctrl_direction_input(struct gpio_chip *gc, unsigned int gpio)
+{
+	struct dwapb_gpio_port *port = gpiochip_get_data(gc);
+	struct pinctrl_state *direction_state;
+	int rc = 0;
+
+	direction_state = port->pinctrl_in_states[gpio];
+	if (direction_state) {
+		rc = pinctrl_select_state(port->pinctrl, direction_state);
+		if (rc)
+			return rc;
+	}
+
+	return port->dir_in(gc, gpio);
+}
+
+static int tp_pinctrl_setup_map(struct dwapb_gpio *gpio,
+				struct dwapb_port_property *pp,
+				struct dwapb_gpio_port *port)
+{
+	int rc = 0;
+
+	port->pinctrl = devm_pinctrl_get(gpio->dev);
+	if (!IS_ERR(port->pinctrl)) {
+		char state_name[16];
+		struct pinctrl_state *state;
+		int i, dir_pin;
+
+		port->pinctrl_out_states = devm_kzalloc(gpio->dev, 
+				sizeof(struct pinctrl_state *) * pp->ngpio,
+				GFP_KERNEL);
+		port->pinctrl_in_states = devm_kzalloc(gpio->dev, 
+				sizeof(struct pinctrl_state *) * pp->ngpio,
+				GFP_KERNEL);
+		if (!port->pinctrl_out_states || !port->pinctrl_in_states)
+			return -ENOMEM;
+
+		dev_info(gpio->dev, "pinctrl device found\n");
+		for (i = 0; i < pp->ngpio; i++) {
+			dir_pin = pp->pinctrl_map[i];
+			if (dir_pin >= 24)
+				continue;
+			sprintf(state_name, "out%d", dir_pin);
+			state = pinctrl_lookup_state(port->pinctrl, state_name);
+			if (!IS_ERR(state))
+				port->pinctrl_out_states[i] = state;
+			else
+				continue;
+			sprintf(state_name, "in%d", dir_pin);
+			state = pinctrl_lookup_state(port->pinctrl, state_name);
+			if (!IS_ERR(state))
+				port->pinctrl_in_states[i] = state;
+			else
+				dev_err(gpio->dev, "state %s not found?\n", state_name);
+		}
+
+		port->dir_out = port->gc.direction_output;
+		port->dir_in = port->gc.direction_input;
+		port->gc.direction_output = tp_pinctrl_direction_output;
+		port->gc.direction_input = tp_pinctrl_direction_input;
+	} else {
+		rc = PTR_ERR(port->pinctrl);
+		dev_info(gpio->dev, "devm_pinctrl_get: error %d\n", rc);
+		port->pinctrl = NULL;
+	}
+
+	return rc;
+}
+#endif
+
 static int dwapb_gpio_add_port(struct dwapb_gpio *gpio,
 			       struct dwapb_port_property *pp,
 			       unsigned int offs)
@@ -417,6 +514,14 @@ static int dwapb_gpio_add_port(struct dwapb_gpio *gpio,
 			port->idx);
 		return err;
 	}
+
+#ifdef CONFIG_TP_GPIODIR_CTL
+	if (pp->pinctrl_map) {
+		err = tp_pinctrl_setup_map(gpio, pp, port);
+		if (err)
+			return err;
+	}
+#endif
 
 #ifdef CONFIG_OF_GPIO
 	port->gc.of_node = to_of_node(pp->fwnode);
@@ -512,6 +617,19 @@ dwapb_gpio_get_pdata(struct device *dev)
 
 		if (has_acpi_companion(dev) && pp->idx == 0)
 			pp->irq = platform_get_irq(to_platform_device(dev), 0);
+#ifdef CONFIG_TP_GPIODIR_CTL
+		if (fwnode_property_read_u32_array(fwnode,
+						   "pinctrl-map",
+						   NULL, 0) > 0) {
+			pp->pinctrl_map = devm_kzalloc(dev, sizeof(u32) * pp->ngpio, GFP_KERNEL);
+			if (!pp->pinctrl_map)
+				return ERR_PTR(-ENOMEM);
+			fwnode_property_read_u32_array(fwnode,
+						       "pinctrl-map",
+						       pp->pinctrl_map,
+						       pp->ngpio);
+		}
+#endif
 
 		pp->irq_shared	= false;
 		pp->gpio_base	= -1;
