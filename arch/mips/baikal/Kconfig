@@ -138,126 +138,6 @@ config MACH_BAIKAL_BFK2
 	# DTB select
 	select DTB_BAIKAL_BFK2
 
-config MACH_BAIKAL_MITX
-	bool "Baikal-T mITX board"
-
-	select MIPS_BAIKAL_T1
-	select BAIKAL_T_COMMON
-
-	# Errata set
-	select PAGE_SIZE_16KB
-
-	# DTB select
-	select DTB_BAIKAL_MITX
-
-	# PCIe
-	select PCI_DRIVERS_GENERIC
-
-config MACH_BAIKAL_MSBT2
-	bool "Baikal-T MSBT2 board"
-
-	select MIPS_BAIKAL_T1
-	select BAIKAL_T_COMMON
-
-	# Errata set
-	select PAGE_SIZE_16KB
-
-	# DTB select
-	select DTB_TP_MSBT2
-
-	# PCIe
-	select PCI_DRIVERS_GENERIC
-
-config MACH_BAIKAL_RT1MB
-	bool "Baikal-T RT1MB board"
-
-	select MIPS_BAIKAL_T1
-	select BAIKAL_T_COMMON
-
-	# Errata set
-	select PAGE_SIZE_16KB
-
-	# DTB select
-	select DTB_TP_RT1MB
-
-	# PCIe
-	select PCI_DRIVERS_GENERIC
-
-config MACH_BAIKAL_MRBT1
-	bool "Baikal-T MRBT1 board"
-
-	select MIPS_BAIKAL_T1
-	select BAIKAL_T_COMMON
-
-	# Errata set
-	select PAGE_SIZE_16KB
-
-	# DTB select
-	select DTB_TP_MRBT1
-
-	# PCIe
-	select PCI_DRIVERS_GENERIC
-
-config MACH_BAIKAL_BN1BT1
-	bool "Baikal-T BN1BT1 board"
-
-	select MIPS_BAIKAL_T1
-	select BAIKAL_T_COMMON
-
-	# Errata set
-	select PAGE_SIZE_16KB
-
-	# DTB select
-	select DTB_TP_BN1BT1
-
-	# PCIe
-	select PCI_DRIVERS_GENERIC
-
-config MACH_BAIKAL_MODULE
-	bool "Baikal-T Module board"
-
-	select MIPS_BAIKAL_T
-	select BAIKAL_T_COMMON
-
-	# Errata set
-	select PAGE_SIZE_16KB
-
-	# DTB select
-	select DTB_BAIKAL_MODULE
-
-	# PCIe
-	select PCI_DRIVERS_GENERIC
-
-config MACH_BAIKAL_MSBT2
-	bool "Baikal-T MSBT2 board"
-
-	select MIPS_BAIKAL_T1
-	select BAIKAL_T_COMMON
-
-	# Errata set
-	select PAGE_SIZE_16KB
-
-	# DTB select
-	select DTB_BAIKAL_MSBT2
-
-	# PCIe
-	select PCI_DRIVERS_GENERIC
-
-config MACH_BAIKAL_RT1MB
-	bool "Baikal-T RT1MB board"
-
-	select MIPS_BAIKAL_T1
-	select BAIKAL_T_COMMON
-
-	# Errata set
-	select PAGE_SIZE_16KB
-
-	# DTB select
-	select DTB_TP_RT1MB
-
-	# PCIe
-	select PCI_DRIVERS_GENERIC
-
 config MACH_BAIKAL_QEMU
 	bool "Baikal-T QEMU simulator"
 
@@ -296,11 +176,116 @@ config MACH_BAIKAL_FPGA
 	# DTB select
 	select DTB_BAIKAL_FPGA
 
+config MACH_BAIKAL_MITX
+	bool "T-Platforms mITX board"
+
+	select MIPS_BAIKAL_T1
+	select BAIKAL_T_COMMON
+
+	# Errata set
+	select PAGE_SIZE_16KB
+
+	# DTB select
+	select DTB_TP_MITX
+
+	# PCIe
+	select PCI_DRIVERS_GENERIC
+
+config MACH_BAIKAL_MSBT2
+	bool "T-Platforms MSBT2 board"
+
+	select MIPS_BAIKAL_T1
+	select BAIKAL_T_COMMON
+
+	# Errata set
+	select PAGE_SIZE_16KB
+
+	# DTB select
+	select DTB_TP_MSBT2
+
+	# PCIe
+	select PCI_DRIVERS_GENERIC
+
+config MACH_BAIKAL_MRBT1
+	bool "T-Platforms MRBT1 board"
+
+	select MIPS_BAIKAL_T1
+	select BAIKAL_T_COMMON
+
+	# Errata set
+	select PAGE_SIZE_16KB
+
+	# DTB select
+	select DTB_TP_MRBT1
+
+	# PCIe
+	select PCI_DRIVERS_GENERIC
+
+config MACH_BAIKAL_BN1BT1
+	bool "T-Platforms BN1BT1 board"
+
+	select MIPS_BAIKAL_T1
+	select BAIKAL_T_COMMON
+
+	# Errata set
+	select PAGE_SIZE_16KB
+
+	# DTB select
+	select DTB_TP_BN1BT1
+
+	# PCIe
+	select PCI_DRIVERS_GENERIC
+
+config MACH_BAIKAL_MODULE
+	bool "Baikal-T Module board"
+
+	select MIPS_BAIKAL_T
+	select BAIKAL_T_COMMON
+
+	# Errata set
+	select PAGE_SIZE_16KB
+
+	# DTB select
+	select DTB_BAIKAL_MODULE
+
+	# PCIe
+	select PCI_DRIVERS_GENERIC
+
+config MACH_BAIKAL_MSBT2
+	bool "T-Platforms MSBT2 board"
+
+	select MIPS_BAIKAL_T1
+	select BAIKAL_T_COMMON
+
+	# Errata set
+	select PAGE_SIZE_16KB
+
+	# DTB select
+	select DTB_BAIKAL_MSBT2
+
+	# PCIe
+	select PCI_DRIVERS_GENERIC
+
+config MACH_BAIKAL_RT1MB
+	bool "Baikal-T RT1MB board"
+
+	select MIPS_BAIKAL_T1
+	select BAIKAL_T_COMMON
+
+	# Errata set
+	select PAGE_SIZE_16KB
+
+	# DTB select
+	select DTB_TP_RT1MB
+
+	# PCIe
+	select PCI_DRIVERS_GENERIC
+
 endchoice
 
 choice
-        prompt "Baikal Board configs"
-        default DTB_BAIKAL
+	prompt "Baikal Board configs"
+	default DTB_BAIKAL
 
 config DTB_BAIKAL
 	bool "Baikal-T generic board"
@@ -342,20 +327,20 @@ config DTB_BAIKAL_FPGA
 	help
 	  Select device tree for Baikal-T SOC based board
 
-config DTB_BAIKAL_MITX
-	bool "Baikal-T MITX board"
+config DTB_TP_MITX
+	bool "T-Platforms MITX board"
 	help
 	  Device tree for T-Platforms mITX boards
 	  based on Baikal-T SOC.
 
 config DTB_TP_MSBT2
-	bool "Baikal-T MSBT2 board"
+	bool "T-Platforms MSBT2 board"
 	help
 	  Device tree for T-Platforms MSBT2 boards
 	  based on Baikal-T SOC.
 
 config DTB_TP_MRBT1
-	bool "Baikal-T MRBT1 board"
+	bool "T-Platforms MRBT1 board"
 	help
 	  Device tree for T-Platforms MRBT1 boards
 	  based on Baikal-T SOC.
