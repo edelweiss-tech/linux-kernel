@@ -130,6 +130,7 @@ static cycle_t gic_hpt_read(struct clocksource *cs)
 	return gic_read_count();
 }
 
+#ifndef CONFIG_MIPS_EXTERNAL_TIMER
 static struct clocksource gic_clocksource = {
 	.name		= "GIC",
 	.read		= gic_hpt_read,
@@ -153,6 +154,7 @@ static int __init __gic_clocksource_init(void)
 
 	return ret;
 }
+#endif
 
 void __init gic_clocksource_init(unsigned int frequency)
 {
@@ -160,7 +162,9 @@ void __init gic_clocksource_init(unsigned int frequency)
 	gic_timer_irq = MIPS_GIC_IRQ_BASE +
 		GIC_LOCAL_TO_HWIRQ(GIC_LOCAL_INT_COMPARE);
 
+#ifndef CONFIG_MIPS_EXTERNAL_TIMER
 	__gic_clocksource_init();
+#endif
 	gic_clockevent_init();
 
 	/* And finally start the counter */
@@ -198,9 +202,11 @@ static int __init gic_clocksource_of_init(struct device_node *node)
 		return -EINVAL;;
 	}
 
+#ifndef CONFIG_MIPS_EXTERNAL_TIMER
 	ret = __gic_clocksource_init();
 	if (ret)
 		return ret;
+#endif
 
 	ret = gic_clockevent_init();
 	if (!ret && !IS_ERR(clk)) {
