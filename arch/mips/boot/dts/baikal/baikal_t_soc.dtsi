@@ -54,6 +54,13 @@
 		};
 	};
 
+	cpufreq: cpufreq@1F04D000 {
+		compatible = "be,cpufreq";
+		reg = <0 0x1F04D000 0 0x0008>;
+		clocks = <&cpu_clk 0>;
+		clock-names = "cpuclk";
+	};
+
 	gic_wdt: gic_wdt {
 		compatible = "be,gic-wdt";
 		interrupts = <GIC_LOCAL 0 IRQ_TYPE_NONE>;
