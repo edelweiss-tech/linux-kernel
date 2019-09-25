@@ -52,7 +52,7 @@ static int be_cpufreq_notifier(struct notifier_block *nb,
 	struct cpufreq_freqs *freqs = data;
 	/* Change freq in /proc/cpuinfo */
 	if (val == CPUFREQ_POSTCHANGE)
-		cpu_data[freqs->cpu].udelay_val = freqs->new * 5;
+		cpu_data[freqs->cpu].udelay_val = freqs->new * 500 / HZ;
 
 	return NOTIFY_OK;
 }
@@ -70,7 +70,7 @@ static int be_cpufreq_target(struct cpufreq_policy *policy,
 	freqs.old = policy->cur;
 	freqs.new = policy->freq_table[index].frequency;
 
-	dev_info(cpufreq->dev,"%u KHz --> %u KHz\n", freqs.old, freqs.new);
+	dev_dbg(cpufreq->dev,"%u KHz --> %u KHz\n", freqs.old, freqs.new);
 
 	reg = ioread32((u32 *)(cpufreq->cpufreq_dev)); /* pull register */
 	pr_debug( "Core PLL CTL reg BEFORE = %x",reg);
@@ -82,11 +82,7 @@ static int be_cpufreq_target(struct cpufreq_policy *policy,
 	
 	policy->cur = freqs.new;
 
-	/* Change freq in /proc/cpuinfo */
-	cpu_data[0].udelay_val= clk_get_rate(policy->clk) / 1000 * 5;
-	cpu_data[1].udelay_val=clk_get_rate(policy->clk) / 1000 * 5;
-
-	dev_info(cpufreq->dev, "Frequency changing procedure completed\n");
+	dev_dbg(cpufreq->dev, "Frequency changing procedure completed\n");
 
 	return 0;
 }
