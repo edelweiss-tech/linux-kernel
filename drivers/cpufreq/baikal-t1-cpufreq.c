@@ -31,10 +31,6 @@
 
 #define VERSION	"2.0"
 
-#define PLL_FREQ_MAX	1300000	/* KHz */
-#define PLL_FREQ_MIN	200000	/* KHz */
-#define PLL_FREQ_STEP	25000	/* KHz */
-
 struct be_cpufreq {
 	struct device *dev;
 	void    __iomem *cpufreq_dev;
@@ -42,6 +38,7 @@ struct be_cpufreq {
 	struct clk *coreclk;			/* Core PLL parent of CPU clk*/
 	unsigned int max_freq;			/* KHz */
 	unsigned int min_freq;			/* KHz */
+	unsigned int freq_step;			/* KHz */
 	unsigned int latency;			/* uS  */
 };
 static struct be_cpufreq *cpufreq;
@@ -93,7 +90,7 @@ static int be_cpufreq_init(struct cpufreq_policy *policy)
 	unsigned int steps, freq;
 	int i, ret;
 
-	steps = (cpufreq->max_freq - cpufreq->min_freq) / PLL_FREQ_STEP;
+	steps = (cpufreq->max_freq - cpufreq->min_freq) / cpufreq->freq_step;
 
 	freq_tbl = kzalloc(sizeof(*freq_tbl) * (steps + 2),
 					GFP_KERNEL);
@@ -104,7 +101,7 @@ static int be_cpufreq_init(struct cpufreq_policy *policy)
 		return -ENOMEM;
 	}
 
-	freq = cpufreq->min_freq;;
+	freq = cpufreq->min_freq;
 	for (i = 0; i <= steps; ++i) {
 		if ((freq < cpufreq->min_freq) || (freq > cpufreq->max_freq))
 			freq_tbl[i].frequency = CPUFREQ_ENTRY_INVALID;
@@ -112,7 +109,7 @@ static int be_cpufreq_init(struct cpufreq_policy *policy)
 			freq_tbl[i].frequency = freq;
 		pr_debug("CPUFreq index %d: frequency %d KHz\n", i,
 			freq_tbl[i].frequency);
-		freq += PLL_FREQ_STEP;
+		freq += cpufreq->freq_step;
 	}
 	freq_tbl[steps + 1].frequency = CPUFREQ_TABLE_END;
 
@@ -191,16 +188,26 @@ static int be_cpufreq_probe(struct platform_device *pdev)
 
 	if (of_property_read_u32_index(np, "clock-frequency-range", 0,
 		&cpufreq->min_freq))
-		cpufreq->min_freq = PLL_FREQ_MIN * 1000;
+		cpufreq->min_freq = 0;
 	cpufreq->min_freq = cpufreq->min_freq / 1000;
 
 	if (of_property_read_u32_index(np, "clock-frequency-range", 1,
 		&cpufreq->max_freq))
-		cpufreq->max_freq = PLL_FREQ_MAX * 1000;
+		cpufreq->max_freq = 0;
 	cpufreq->max_freq = cpufreq->max_freq / 1000;
 
+	if (of_property_read_u32_index(np, "clock-frequency-range", 2,
+		&cpufreq->freq_step))
+		cpufreq->freq_step = 0;
+	cpufreq->freq_step = cpufreq->freq_step / 1000;
 
 	be_cpufreq_driver.driver_data = (void *)cpufreq;
+
+	if (cpufreq->min_freq == 0 || cpufreq->max_freq == 0 ||
+	    cpufreq->freq_step == 0) {
+		dev_err(dev, "clock-frequency-range parse error.\n");
+		return -EINVAL;
+	}
 
 	ret = cpufreq_register_driver(&be_cpufreq_driver);
 	if (ret) {
