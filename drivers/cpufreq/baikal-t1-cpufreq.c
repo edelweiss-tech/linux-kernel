@@ -123,7 +123,7 @@ static int be_cpufreq_init(struct cpufreq_policy *policy)
 	policy->driver_data = (void *) cpufreq;
 	policy->clk = cpufreq->coreclk;
 	policy->cur = clk_get_rate(policy->clk) / 1000;
-	ret = cpufreq_generic_init(policy, freq_tbl, 1000);
+	ret = cpufreq_generic_init(policy, freq_tbl, 1000000); /* 1ms latency */
 	if (ret)
 		kfree(freq_tbl);
 
