@@ -294,6 +294,18 @@ config LOONGSON1_CPUFREQ
 	  For details, take a look at <file:Documentation/cpu-freq/>.
 
 	  If in doubt, say N.
+
+config BAIKAL_T1_CPUFREQ
+	tristate "Baikal-T1 CPUFreq Driver"
+	depends on MIPS_BAIKAL
+	help
+	  This option adds a CPUFreq driver for Baikal-T1 processor which
+	  support software configurable cpu frequency.
+
+	  For details, take a look at <file:Documentation/cpu-freq/>.
+
+	  If in doubt, say N.
+
 endif
 
 if SPARC64
