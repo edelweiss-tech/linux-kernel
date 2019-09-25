@@ -95,7 +95,7 @@ static int be_cpufreq_init(struct cpufreq_policy *policy)
 
 	steps = (cpufreq->max_freq - cpufreq->min_freq) / PLL_FREQ_STEP;
 
-	freq_tbl = kzalloc(sizeof(*freq_tbl) * (steps + 1),
+	freq_tbl = kzalloc(sizeof(*freq_tbl) * (steps + 2),
 					GFP_KERNEL);
 
 	if (!freq_tbl) {
