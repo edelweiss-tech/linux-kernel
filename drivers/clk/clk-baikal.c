@@ -55,7 +55,7 @@
 	(BE_CLKR_VAL(NR) | BE_CLKF_VAL(NF) | BE_CLKOD_VAL(OD))
 
 #define BE_PLL_DIV_MASK			0x01FFFFFC
-#define BE_PLL_LATENCY			100000000 /* ns */
+#define BE_PLL_LATENCY			20000 /* ns */
 #define BE_PLL_FREQ_STEP		25000000
 
 static DEFINE_SPINLOCK(clk_lock);
