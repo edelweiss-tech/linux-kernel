@@ -24,6 +24,5 @@ obj-$(CONFIG_DW_PCIE_HOST_INIT)	+= baikal-pci.o
 
 obj-$(CONFIG_EARLY_PRINTK)	+= baikal-console.o
 obj-$(CONFIG_OF)		+= baikal-of.o
-obj-$(CONFIG_CPU_FREQ)		+= baikal-cpufreq.o
 obj-$(CONFIG_KEXEC)		+= baikal-kexec.o
 obj-$(CONFIG_MACH_BAIKAL_BFK2)	+= baikal-efuse.o
