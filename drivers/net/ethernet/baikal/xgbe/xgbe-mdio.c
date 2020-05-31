@@ -542,11 +542,11 @@ static int be_xgbe_xmit_probe(struct xgbe_prv_data *pdata)
 
 	phydev->speed = SPEED_10000;
 	phydev->duplex = DUPLEX_FULL;
-	phydev->dev.of_node = xmit_node;
+	phydev->mdio.dev.of_node = xmit_node;
 
 	pdata->phydev = phydev;
 	/* refcount is held by phy_attach_direct() on success */
-	put_device(&phydev->dev);
+	put_device(&phydev->mdio.dev);
 
 #if 0
 	/* Add sysfs link to netdevice */
