@@ -1651,8 +1651,10 @@ static void xgbe_poll_controller(struct net_device *netdev)
 
 	if (pdata->per_channel_irq) {
 		channel = pdata->channel;
-		for (i = 0; i < pdata->channel_count; i++, channel++)
-			xgbe_dma_isr(channel->dma_irq, channel);
+		for (i = 0; i < pdata->channel_count; i++, channel++) {
+			xgbe_dma_tx_isr(channel->tx_dma_irq, channel);
+			xgbe_dma_rx_isr(channel->rx_dma_irq, channel);
+		}
 	} else {
 		disable_irq(pdata->dev_irq);
 		xgbe_isr(pdata->dev_irq, pdata);
