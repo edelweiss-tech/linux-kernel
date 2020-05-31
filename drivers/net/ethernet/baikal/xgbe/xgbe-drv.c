@@ -1665,11 +1665,17 @@ static void xgbe_poll_controller(struct net_device *netdev)
 }
 #endif /* End CONFIG_NET_POLL_CONTROLLER */
 
-static int xgbe_setup_tc(struct net_device *netdev, u8 tc)
+static int xgbe_setup_tc(struct net_device *netdev, u32 handle, __be16 proto,
+			 struct tc_to_netdev *tc_to_netdev)
 {
 	struct xgbe_prv_data *pdata = netdev_priv(netdev);
 	unsigned int offset, queue;
-	u8 i;
+	u8 tc, i;
+
+	if (tc_to_netdev->type != TC_SETUP_MQPRIO)
+		return -EINVAL;
+
+	tc = tc_to_netdev->tc;
 
 	if (tc && (tc != pdata->hw_feat.tc_cnt))
 		return -EINVAL;
